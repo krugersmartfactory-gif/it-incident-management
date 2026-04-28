@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IT Incident Management - Supabase</title>
+  
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- HTML5 QR Code Scanner -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f7fa; min-height: 100vh; }
+    .navbar { background: #1a73e8; color: #fff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; }
+    .navbar-brand { font-size: 18px; font-weight: 700; }
+    .btn-logout { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+    .tabs { background: #fff; border-bottom: 2px solid #e0e0e0; display: flex; padding: 0 24px; }
+    .tab { padding: 14px 24px; cursor: pointer; border-bottom: 3px solid transparent; font-weight: 600; color: #666; }
+    .tab.active { color: #1a73e8; border-bottom-color: #1a73e8; }
+    .container { max-width: 1200px; margin: 24px auto; padding: 0 24px; }
+    .tab-content { display: none; background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    .tab-content.active { display: block; }
+    .form-group { margin-bottom: 18px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 6px; }
+    input, select, textarea { width: 100%; padding: 10px 14px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #1a73e8; }
+    .btn-primary { background: #1a73e8; color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn-primary:hover { background: #1557b0; }
+    .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+    .alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+    .alert-error { background: #fdecea; color: #c62828; border: 1px solid #f5c6cb; }
+    .login-page { background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .login-box { background: #fff; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); padding: 40px 36px 32px; width: 100%; max-width: 400px; }
+    .hidden { display: none !important; }
+    
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      .navbar { flex-direction: column; gap: 12px; }
+      .navbar-brand { font-size: 16px; }
+      .tabs { flex-wrap: wrap; padding: 0 12px; }
+      .tab { padding: 10px 16px; font-size: 13px; }
+      .container { padding: 0 12px; margin: 12px auto; }
+      .tab-content { padding: 16px; border-radius: 8px; }
+      .login-box { padding: 24px 20px 16px; }
+      input, select, textarea { padding: 8px 10px; font-size: 16px; }
+      .btn-primary { padding: 10px 16px; font-size: 14px; }
+      label { font-size: 12px; margin-bottom: 4px; }
+      .form-group { margin-bottom: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage" class="login-page">
+  <div class="login-box">
+    <div style="text-align: center; margin-bottom: 24px;">
+      <h1 style="font-size: 20px; color: #1a73e8; font-weight: 700;">IT Incident Management</h1>
+    </div>
+    
+    <!-- Warning message -->
+    <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+      <div style="display: flex; align-items: start; gap: 8px;">
+        <span style="font-size: 20px;">⚠️</span>
+        <div style="flex: 1;">
+          <strong style="color: #856404; font-size: 14px;">Cảnh báo bảo mật:</strong>
+          <p style="color: #856404; font-size: 13px; margin: 4px 0 0 0; line-height: 1.5;">
+            Bạn chỉ có <strong>3 lần đăng nhập</strong>. Nếu đăng nhập sai 3 lần, tài khoản sẽ bị <strong style="color: #d32f2f;">KHÓA VĨNH VIỄN</strong> và chỉ Admin mới có thể mở khóa.
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    <div id="loginError" class="alert alert-error hidden"></div>
+    <div id="loginWarning" class="hidden" style="background: #fff3cd; border: 2px solid #ff9800; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 24px;">🚨</span>
+        <div style="flex: 1; color: #e65100; font-weight: 600; font-size: 14px;" id="loginWarningText"></div>
+      </div>
+    </div>
+    
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="loginEmail" required>
+      </div>
+      <div class="form-group">
+        <label>Mật khẩu</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="password" id="loginPassword" required style="flex: 1;">
+          <button type="button" id="toggleLoginPasswordBtn" style="background: #f0f0f0; border: 1.5px solid #ddd; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-size: 16px;">👁</button>
+        </div>
+      </div>
+      <button type="submit" class="btn-primary" style="width: 100%;">Đăng nhập</button>
+    </form>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" class="hidden">
+  <nav class="navbar">
+    <div class="navbar-brand">🛠️ IT Incident Management</div>
+    <div>
+      <span>Xin chào, <strong id="userNameDisplay">—</strong></span>
+      <button class="btn-logout" id="changePasswordBtn" style="margin-left: 12px;">🔑 Đổi mật khẩu</button>
+      <button class="btn-logout" id="logoutBtn" style="margin-left: 8px;">Đăng xuất</button>
+    </div>
+  </nav>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="report">📝 Báo hỏng</div>
+    <div class="tab" data-tab="process">⚙️ Xử lý sự cố</div>
+    <div class="tab" data-tab="rate">⭐ Đánh giá</div>
+    <div class="tab" data-tab="admin">🔐 Quản trị</div>
+  </div>
+
+  <div class="container">
+    <!-- Tab 1: Báo hỏng -->
+    <div id="tabReport" class="tab-content active">
+      <h2 style="margin-bottom:20px;">Báo hỏng thiết bị</h2>
+      <div id="reportAlert"></div>
+      
+      <!-- Nút mở form -->
+      <button id="btnShowReportForm" class="btn-primary hidden" style="width: 100%; margin-bottom: 20px;">
+        📝 Báo hỏng thiết bị mới
+      </button>
+      
+      <form id="reportForm">
+        <div class="form-group">
+          <label>Mã thiết bị *</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="deviceCode" required style="flex: 1;">
+            <button type="button" id="btnScanDeviceCode" style="background: #f57c00; color: #fff; border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 16px; white-space: nowrap;">📷 Quét mã</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Tên thiết bị</label>
+          <input type="text" id="deviceName">
+        </div>
+        <div class="form-group">
+          <label>Người dùng</label>
+          <input type="text" id="userName" readonly>
+        </div>
+        <div class="form-group">
+          <label>Bộ phận</label>
+          <input type="text" id="userDepartment" readonly>
+        </div>
+        <div class="form-group">
+          <label>Mô tả sự cố *</label>
+          <textarea id="description" required style="min-height: 100px;"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Mức độ *</label>
+          <select id="severity" required>
+            <option value="">-- Chọn mức độ --</option>
+            <option value="Cao">Cao</option>
+            <option value="Trung bình">Trung bình</option>
+            <option value="Thấp">Thấp</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%;">Gửi báo hỏng</button>
+      </form>
+    </div>
+
+    <!-- Tab 2: Xử lý sự cố -->
+    <div id="tabProcess" class="tab-content">
+      <h2 style="margin-bottom:20px;">Xử lý sự cố</h2>
+      <div id="processAlert"></div>
+      <div id="incidentsTable" style="overflow-x: auto; margin-bottom: 24px;"></div>
+      
+      <!-- Form xử lý sự cố (ẩn ban đầu) -->
+      <div id="resolveForm" class="hidden" style="margin-top: 24px; padding: 20px; background: #f9f9f9; border-radius: 8px;">
+        <h3 style="margin-top: 0;">Xử lý sự cố: <span id="resolveIncidentCode"></span></h3>
+        <form id="resolveFormElement">
+          <div class="form-group">
+            <label>Người xử lý *</label>
+            <input type="text" id="resolver" required>
+          </div>
+          <div class="form-group">
+            <label>Kết quả xử lý *</label>
+            <textarea id="resolution" required style="min-height: 100px;"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Nguyên nhân gốc rễ</label>
+            <textarea id="rootCause" style="min-height: 80px;"></textarea>
+          </div>
+          <button type="submit" class="btn-primary">Hoàn thành xử lý</button>
+          <button type="button" id="cancelResolveBtn" style="margin-left: 8px; padding: 12px 24px; background: #ccc; color: #333; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">Hủy</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tab 3: Đánh giá -->
+    <div id="tabRate" class="tab-content">
+      <h2 style="margin-bottom:20px;">Đánh giá chất lượng xử lý</h2>
+      <div id="rateAlert"></div>
+      
+      <!-- Nút mở form -->
+      <button id="btnShowRateForm" class="btn-primary hidden" style="width: 100%; margin-bottom: 20px;">
+        ⭐ Đánh giá sự cố mới
+      </button>
+      
+      <form id="rateForm">
+        <div class="form-group">
+          <label>Mã sự cố *</label>
+          <input type="text" id="rateIncidentCode" required>
+        </div>
+        <div class="form-group">
+          <label>Đánh giá *</label>
+          <div style="display: flex; gap: 8px; font-size: 32px; cursor: pointer;" id="starRating">
+            <span class="star" data-value="1" style="color: #ccc;">★</span>
+            <span class="star" data-value="2" style="color: #ccc;">★</span>
+            <span class="star" data-value="3" style="color: #ccc;">★</span>
+            <span class="star" data-value="4" style="color: #ccc;">★</span>
+            <span class="star" data-value="5" style="color: #ccc;">★</span>
+          </div>
+          <div id="starLabel" style="margin-top: 8px; font-size: 14px; color: #666; min-height: 20px;">Nhấn sao để đánh giá</div>
+          <input type="hidden" id="ratingValue" required>
+        </div>
+        <div class="form-group">
+          <label>Nhận xét thái độ người xử lý</label>
+          <textarea id="attitudeComment" placeholder="Ví dụ: Nhiệt tình, hỗ trợ tốt..." style="min-height: 80px;"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Tên người đánh giá *</label>
+          <select id="raterName" required>
+            <option value="">-- Chọn người đánh giá --</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary">Gửi đánh giá</button>
+      </form>
+    </div>
+
+    <!-- Tab 4: Quản trị (Admin only) -->
+    <div id="tabAdmin" class="tab-content">
+      <h2 style="margin-bottom:20px;">🔐 Quản trị hệ thống</h2>
+      <div id="adminAlert"></div>
+      
+      <!-- Danh sách tài khoản bị khóa -->
+      <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 12px; margin-bottom: 20px;">
+        <strong>⚠️ Chức năng Admin:</strong> Chỉ tài khoản Admin mới có thể mở khóa tài khoản bị khóa.
+      </div>
+      
+      <button id="btnRefreshLockedAccounts" class="btn-primary" style="margin-bottom: 20px;">
+        🔄 Làm mới danh sách
+      </button>
+      
+      <div id="lockedAccountsTable" style="overflow-x: auto;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ĐỔI MẬT KHẨU -->
+<div id="changePasswordModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+  <div style="background: #fff; border-radius: 12px; padding: 32px; width: 100%; max-width: 400px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
+    <h2 style="margin-top: 0; color: #1a73e8;">🔑 Đổi mật khẩu</h2>
+    <div id="changePasswordAlert"></div>
+    <form id="changePasswordForm">
+      <div class="form-group">
+        <label>Mật khẩu cũ *</label>
+        <input type="password" id="oldPassword" required>
+      </div>
+      <div class="form-group">
+        <label>Mật khẩu mới * (tối thiểu 6 ký tự)</label>
+        <input type="password" id="newPassword" required minlength="6">
+      </div>
+      <div class="form-group">
+        <label>Xác nhận mật khẩu mới *</label>
+        <input type="password" id="confirmPassword" required minlength="6">
+      </div>
+      <button type="submit" class="btn-primary" style="width: 100%;">Đổi mật khẩu</button>
+      <button type="button" id="cancelChangePasswordBtn" style="width: 100%; margin-top: 8px; padding: 12px 24px; background: #ccc; color: #333; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">Hủy</button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL QUÉT MÃ -->
+<div id="scanQRModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+  <div style="background: #fff; border-radius: 12px; padding: 24px; width: 100%; max-width: 500px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
+    <h2 style="margin-top: 0; color: #1a73e8;">📷 Quét mã thiết bị</h2>
+    <div id="scanAlert"></div>
+    <div id="qr-reader" style="width: 100%; margin: 20px 0;"></div>
+    <div style="text-align: center; margin-top: 16px;">
+      <button type="button" id="cancelScanBtn" style="padding: 12px 24px; background: #ccc; color: #333; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ========================================
+  // SUPABASE CONFIGURATION
+  // ========================================
+  const SUPABASE_URL = 'https://vjudueltlidywypsktwk.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqdWR1ZWx0bGlkeXd5cHNrdHdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMDk5ODgsImV4cCI6MjA5MjU4NTk4OH0.YcnG3XF-sbAQYMH8HreQ7N4wZjiFzxN1oConjR7tcJM';
+  
+  // Initialize Supabase client
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+  // ========================================
+  // GLOBAL VARIABLES
+  // ========================================
+  let userName = null;
+  let department = null;
+  let userFormAccess = '';
+  let userEmail = '';
+  let html5QrcodeScanner = null;
+  
+  // ========================================
+  // QR CODE SCANNER
+  // ========================================
+  function showQRScanner() {
+    document.getElementById('scanQRModal').classList.remove('hidden');
+    document.getElementById('scanAlert').innerHTML = '';
+    
+    // Initialize scanner
+    html5QrcodeScanner = new Html5Qrcode("qr-reader");
+    
+    html5QrcodeScanner.start(
+      { facingMode: "environment" }, // Use back camera
+      {
+        fps: 10,
+        qrbox: { width: 250, height: 250 }
+      },
+      onScanSuccess,
+      onScanError
+    ).catch(err => {
+      document.getElementById('scanAlert').innerHTML = '<div class="alert alert-error">Không thể mở camera: ' + err + '</div>';
+    });
+  }
+  
+  function hideQRScanner() {
+    if (html5QrcodeScanner) {
+      html5QrcodeScanner.stop().then(() => {
+        html5QrcodeScanner.clear();
+        html5QrcodeScanner = null;
+      }).catch(err => {
+        console.error('Error stopping scanner:', err);
+      });
+    }
+    document.getElementById('scanQRModal').classList.add('hidden');
+  }
+  
+  async function onScanSuccess(decodedText, decodedResult) {
+    // Stop scanner
+    hideQRScanner();
+    
+    // Fill device code
+    document.getElementById('deviceCode').value = decodedText;
+    
+    // Try to fetch device info from database
+    try {
+      const { data: device, error } = await supabaseClient
+        .from('devices')
+        .select('*')
+        .eq('device_code', decodedText)
+        .single();
+      
+      if (!error && device) {
+        // Auto-fill device name if found
+        document.getElementById('deviceName').value = device.device_name || '';
+        document.getElementById('reportAlert').innerHTML = '<div class="alert alert-success">✅ Đã quét mã: ' + decodedText + '</div>';
+      } else {
+        document.getElementById('reportAlert').innerHTML = '<div class="alert alert-success">✅ Đã quét mã: ' + decodedText + '<br>Vui lòng nhập tên thiết bị.</div>';
+      }
+    } catch (error) {
+      console.error('Error fetching device:', error);
+      document.getElementById('reportAlert').innerHTML = '<div class="alert alert-success">✅ Đã quét mã: ' + decodedText + '</div>';
+    }
+  }
+  
+  function onScanError(errorMessage) {
+    // Ignore scan errors (they happen frequently while scanning)
+  }
+  
+  // ========================================
+  // ERROR HANDLING
+  // ========================================
+  function handleSupabaseError(error) {
+    console.error('Supabase error:', error);
+    
+    if (error.message) {
+      if (error.message.includes('Invalid login credentials')) {
+        return 'Email hoặc mật khẩu không đúng';
+      }
+      if (error.message.includes('Email not confirmed')) {
+        return 'Email chưa được xác nhận';
+      }
+      if (error.message.includes('User not found')) {
+        return 'Tài khoản không tồn tại';
+      }
+    }
+    
+    return error.message || 'Đã xảy ra lỗi. Vui lòng thử lại';
+  }
+  
+  // ========================================
+  // UI FUNCTIONS
+  // ========================================
+  function showLoginPage() {
+    document.getElementById('loginPage').classList.remove('hidden');
+    document.getElementById('mainApp').classList.add('hidden');
+  }
+  
+  function showMainApp() {
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('mainApp').classList.remove('hidden');
+    document.getElementById('userNameDisplay').textContent = userName;
+    
+    // Fill user info in report form
+    document.getElementById('userName').value = userName;
+    document.getElementById('userDepartment').value = department;
+    
+    // Apply form access permissions
+    applyFormAccessPermissions();
+  }
+  
+  function applyFormAccessPermissions() {
+    const formAccess = (userFormAccess || '').toLowerCase();
+    const tabs = document.querySelectorAll('.tab');
+    
+    // Hide all tabs first
+    tabs.forEach(tab => tab.style.display = 'none');
+    
+    // Show tabs based on permissions
+    if (formAccess.includes('báo hỏng')) {
+      tabs[0].style.display = 'block'; // Report tab
+    }
+    if (formAccess.includes('xử lý')) {
+      tabs[1].style.display = 'block'; // Process tab
+    }
+    if (formAccess.includes('đánh giá')) {
+      tabs[2].style.display = 'block'; // Rate tab
+    }
+    if (formAccess.includes('quản trị')) {
+      tabs[3].style.display = 'block'; // Admin tab
+    }
+    
+    // Switch to first available tab
+    if (formAccess.includes('báo hỏng')) {
+      switchTab('report');
+    } else if (formAccess.includes('xử lý')) {
+      switchTab('process');
+    } else if (formAccess.includes('đánh giá')) {
+      switchTab('rate');
+    } else if (formAccess.includes('quản trị')) {
+      switchTab('admin');
+    }
+  }
+  
+  function switchTab(tabName) {
+    // Remove active class from all tabs and contents
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    // Add active class to selected tab and content
+    document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
+    document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.add('active');
+    
+    // Load data when switching to process tab
+    if (tabName === 'process') {
+      loadOpenIncidents();
+    }
+    
+    // Load users when switching to rate tab
+    if (tabName === 'rate') {
+      loadUsersForRating();
+    }
+    
+    // Load locked accounts when switching to admin tab
+    if (tabName === 'admin') {
+      loadLockedAccounts();
+    }
+  }
+  
+  // ========================================
+  // AUTHENTICATION
+  // ========================================
+  async function checkSession() {
+    try {
+      const { data: { session }, error } = await supabaseClient.auth.getSession();
+      
+      if (error) throw error;
+      
+      if (!session) {
+        showLoginPage();
+        return;
+      }
+      
+      // Fetch user profile
+      const { data: userProfile, error: profileError } = await supabaseClient
+        .from('users')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+      
+      if (profileError) throw profileError;
+      
+      // Store user info
+      userName = userProfile.name;
+      department = userProfile.department;
+      userFormAccess = userProfile.form_access || 'báo hỏng, xử lý, đánh giá';
+      userEmail = userProfile.email;
+      
+      showMainApp();
+      
+      // Check if device code is in URL (from QR code scan)
+      const urlParams = new URLSearchParams(window.location.search);
+      const deviceCode = urlParams.get('device');
+      
+      if (deviceCode) {
+        // Auto-fill device code and switch to report tab
+        switchTab('report');
+        document.getElementById('deviceCode').value = deviceCode;
+        
+        // Try to fetch device info
+        loadDeviceInfo(deviceCode);
+        
+        // Show success message
+        document.getElementById('reportAlert').innerHTML = '<div class="alert alert-success">✅ Đã tải thông tin thiết bị: ' + deviceCode + '</div>';
+        
+        // Clear URL parameter
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    } catch (error) {
+      console.error('Session check error:', error);
+      showLoginPage();
+    }
+  }
+  
+  async function loadDeviceInfo(deviceCode) {
+    try {
+      const { data: device, error } = await supabaseClient
+        .from('devices')
+        .select('*')
+        .eq('device_code', deviceCode)
+        .single();
+      
+      if (!error && device) {
+        document.getElementById('deviceName').value = device.device_name || '';
+      }
+    } catch (error) {
+      console.error('Error loading device info:', error);
+    }
+  }
+  
+  async function handleLogin(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    // Hide previous error and warning
+    document.getElementById('loginError').classList.add('hidden');
+    document.getElementById('loginWarning').classList.add('hidden');
+    
+    try {
+      // Check if account is locked
+      const { data: lockStatus, error: lockError } = await supabaseClient
+        .rpc('check_account_lock', { user_email: email });
+      
+      if (lockError) {
+        console.error('Lock check error:', lockError);
+      }
+      
+      if (lockStatus && lockStatus.is_locked) {
+        document.getElementById('loginError').innerHTML = `
+          <div style="display: flex; align-items: start; gap: 8px;">
+            <span style="font-size: 24px;">🔒</span>
+            <div>
+              <strong>Tài khoản đã bị khóa vĩnh viễn!</strong><br>
+              ${lockStatus.message || 'Vui lòng liên hệ Admin để mở khóa.'}
+            </div>
+          </div>
+        `;
+        document.getElementById('loginError').classList.remove('hidden');
+        return;
+      }
+      
+      // Show warning if there are previous failed attempts
+      if (lockStatus && lockStatus.failed_attempts > 0) {
+        const attemptsLeft = 3 - lockStatus.failed_attempts;
+        document.getElementById('loginWarningText').innerHTML = `
+          ⚠️ Bạn đã đăng nhập sai <strong>${lockStatus.failed_attempts} lần</strong>. 
+          Còn <strong style="color: #d32f2f;">${attemptsLeft} lần đăng nhập</strong> trước khi tài khoản bị khóa vĩnh viễn!
+        `;
+        document.getElementById('loginWarning').classList.remove('hidden');
+      }
+      
+      // Sign in with Supabase Auth
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+      
+      if (error) {
+        // Record failed login attempt
+        await supabaseClient.rpc('record_failed_login', {
+          user_email: email,
+          user_ip: null,
+          user_agent_string: navigator.userAgent
+        });
+        
+        // Check how many attempts left
+        const { data: newLockStatus } = await supabaseClient
+          .rpc('check_account_lock', { user_email: email });
+        
+        if (newLockStatus && newLockStatus.failed_attempts > 0) {
+          const attemptsLeft = 3 - newLockStatus.failed_attempts;
+          
+          if (attemptsLeft > 0) {
+            // Still have attempts left
+            document.getElementById('loginError').innerHTML = `
+              <div style="display: flex; align-items: start; gap: 8px;">
+                <span style="font-size: 24px;">❌</span>
+                <div>
+                  <strong>Email hoặc mật khẩu không đúng!</strong><br>
+                  <span style="color: #d32f2f; font-weight: 600;">
+                    Còn ${attemptsLeft} lần đăng nhập trước khi tài khoản bị khóa vĩnh viễn.
+                  </span>
+                </div>
+              </div>
+            `;
+          } else {
+            // Account locked
+            document.getElementById('loginError').innerHTML = `
+              <div style="display: flex; align-items: start; gap: 8px;">
+                <span style="font-size: 24px;">🔒</span>
+                <div>
+                  <strong style="color: #d32f2f;">Tài khoản đã bị khóa vĩnh viễn!</strong><br>
+                  Bạn đã đăng nhập sai 3 lần. Vui lòng liên hệ Admin để mở khóa tài khoản.
+                </div>
+              </div>
+            `;
+          }
+          document.getElementById('loginError').classList.remove('hidden');
+          return;
+        }
+        
+        throw error;
+      }
+      
+      // Clear failed login attempts on successful login
+      await supabaseClient.rpc('clear_failed_logins', { user_email: email });
+      
+      // Fetch user profile
+      const { data: userProfile, error: profileError } = await supabaseClient
+        .from('users')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+      
+      if (profileError) throw profileError;
+      
+      // CRITICAL: Check if account is locked even after successful Auth login
+      if (userProfile.is_locked === true) {
+        // Sign out immediately
+        await supabaseClient.auth.signOut();
+        
+        document.getElementById('loginError').innerHTML = `
+          <div style="display: flex; align-items: start; gap: 8px;">
+            <span style="font-size: 24px;">🔒</span>
+            <div>
+              <strong style="color: #d32f2f;">Tài khoản đã bị khóa vĩnh viễn!</strong><br>
+              ${userProfile.locked_reason || 'Vui lòng liên hệ Admin để mở khóa tài khoản.'}
+            </div>
+          </div>
+        `;
+        document.getElementById('loginError').classList.remove('hidden');
+        return;
+      }
+      
+      // Store user info
+      userName = userProfile.name;
+      department = userProfile.department;
+      userFormAccess = userProfile.form_access || 'báo hỏng, xử lý, đánh giá';
+      userEmail = userProfile.email;
+      
+      showMainApp();
+    } catch (error) {
+      const errorMsg = handleSupabaseError(error);
+      document.getElementById('loginError').textContent = errorMsg;
+      document.getElementById('loginError').classList.remove('hidden');
+    }
+  }
+  
+  async function handleLogout() {
+    try {
+      await supabaseClient.auth.signOut();
+      window.location.reload();
+    } catch (error) {
+      console.error('Logout error:', error);
+      window.location.reload();
+    }
+  }
+  
+  // ========================================
+  // CHANGE PASSWORD
+  // ========================================
+  function showChangePasswordModal() {
+    document.getElementById('changePasswordModal').classList.remove('hidden');
+    document.getElementById('changePasswordForm').reset();
+    document.getElementById('changePasswordAlert').innerHTML = '';
+  }
+  
+  function hideChangePasswordModal() {
+    document.getElementById('changePasswordModal').classList.add('hidden');
+    document.getElementById('changePasswordForm').reset();
+    document.getElementById('changePasswordAlert').innerHTML = '';
+  }
+  
+  async function handleChangePassword(event) {
+    event.preventDefault();
+    
+    const oldPassword = document.getElementById('oldPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (newPassword !== confirmPassword) {
+      document.getElementById('changePasswordAlert').innerHTML = '<div class="alert alert-error">Mật khẩu mới và xác nhận không khớp!</div>';
+      return;
+    }
+    
+    if (newPassword.length < 6) {
+      document.getElementById('changePasswordAlert').innerHTML = '<div class="alert alert-error">Mật khẩu mới phải có ít nhất 6 ký tự!</div>';
+      return;
+    }
+    
+    try {
+      // Verify old password by re-authenticating
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      
+      const { error: signInError } = await supabaseClient.auth.signInWithPassword({
+        email: user.email,
+        password: oldPassword
+      });
+      
+      if (signInError) {
+        document.getElementById('changePasswordAlert').innerHTML = '<div class="alert alert-error">Mật khẩu cũ không đúng</div>';
+        return;
+      }
+      
+      // Update password
+      const { error } = await supabaseClient.auth.updateUser({
+        password: newPassword
+      });
+      
+      if (error) throw error;
+      
+      // Update password_last_changed in users table
+      await supabaseClient
+        .from('users')
+        .update({ password_last_changed: new Date().toISOString() })
+        .eq('id', user.id);
+      
+      document.getElementById('changePasswordAlert').innerHTML = '<div class="alert alert-success">✅ Đổi mật khẩu thành công!</div>';
+      
+      setTimeout(() => {
+        hideChangePasswordModal();
+      }, 2000);
+    } catch (error) {
+      const errorMsg = handleSupabaseError(error);
+      document.getElementById('changePasswordAlert').innerHTML = '<div class="alert alert-error">' + errorMsg + '</div>';
+    }
+  }
+  
+  // ========================================
+  // REPORT INCIDENT
+  // ========================================
+  function showReportForm() {
+    document.getElementById('reportForm').classList.remove('hidden');
+    document.getElementById('btnShowReportForm').classList.add('hidden');
+    document.getElementById('reportAlert').innerHTML = '';
+  }
+  
+  function hideReportForm() {
+    document.getElementById('reportForm').classList.add('hidden');
+    document.getElementById('btnShowReportForm').classList.remove('hidden');
+  }
+  
+  async function handleReportSubmit(event) {
+    event.preventDefault();
+    
+    const data = {
+      userName: userName,
+      department: department,
+      deviceCode: document.getElementById('deviceCode').value,
+      deviceName: document.getElementById('deviceName').value,
+      description: document.getElementById('description').value,
+      severity: document.getElementById('severity').value
+    };
+    
+    try {
+      // Generate incident code
+      const { data: incidentCode, error: codeError } = await supabaseClient
+        .rpc('generate_incident_code');
+      
+      if (codeError) throw codeError;
+      
+      // Insert incident
+      const { error: insertError } = await supabaseClient
+        .from('incidents')
+        .insert({
+          incident_code: incidentCode,
+          user_name: data.userName,
+          department: data.department,
+          device_code: data.deviceCode,
+          device_name: data.deviceName,
+          description: data.description,
+          severity: data.severity,
+          status: 'Open'
+        });
+      
+      if (insertError) throw insertError;
+      
+      document.getElementById('reportAlert').innerHTML = '<div class="alert alert-success">✅ Báo hỏng thành công! Mã sự cố: <strong>' + incidentCode + '</strong><br>Bộ phận IT sẽ xử lý trong thời gian sớm nhất.</div>';
+      document.getElementById('reportForm').reset();
+      
+      // Restore user info
+      document.getElementById('userName').value = userName;
+      document.getElementById('userDepartment').value = department;
+      
+      // Hide form after success
+      hideReportForm();
+    } catch (error) {
+      const errorMsg = handleSupabaseError(error);
+      document.getElementById('reportAlert').innerHTML = '<div class="alert alert-error">' + errorMsg + '</div>';
+    }
+  }
+  
+  // ========================================
+  // PROCESS INCIDENTS
+  // ========================================
+  let currentIncidentCode = null;
+  
+  async function loadOpenIncidents() {
+    try {
+      const { data: incidents, error } = await supabaseClient
+        .from('incidents')
+        .select('*')
+        .eq('status', 'Open')
+        .order('incident_date', { ascending: false });
+      
+      if (error) throw error;
+      
+      if (incidents && incidents.length > 0) {
+        let html = '<table style="width: 100%; border-collapse: collapse;">';
+        html += '<tr style="background: #f0f0f0; font-weight: 600;">';
+        html += '<th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Mã sự cố</th>';
+        html += '<th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Thiết bị</th>';
+        html += '<th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Mô tả</th>';
+        html += '<th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Mức độ</th>';
+        html += '<th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Hành động</th>';
+        html += '</tr>';
+        
+        incidents.forEach(inc => {
+          const severityColor = inc.severity === 'Cao' ? '#d32f2f' : (inc.severity === 'Trung bình' ? '#F57C00' : '#388E3C');
+          html += '<tr>';
+          html += '<td style="padding: 10px; border: 1px solid #ddd;"><strong>' + inc.incident_code + '</strong></td>';
+          html += '<td style="padding: 10px; border: 1px solid #ddd;">' + inc.device_code + '</td>';
+          html += '<td style="padding: 10px; border: 1px solid #ddd;">' + inc.description.substring(0, 50) + '...</td>';
+          html += '<td style="padding: 10px; border: 1px solid #ddd; color: ' + severityColor + '; font-weight: 600;">' + inc.severity + '</td>';
+          html += '<td style="padding: 10px; border: 1px solid #ddd; text-align: center;"><button onclick="selectIncidentToResolve(\'' + inc.incident_code + '\')" style="background: #1a73e8; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">Xử lý</button></td>';
+          html += '</tr>';
+        });
+        html += '</table>';
+        document.getElementById('incidentsTable').innerHTML = html;
+      } else {
+        document.getElementById('incidentsTable').innerHTML = '<p style="text-align: center; color: #999;">Không có sự cố nào cần xử lý</p>';
+      }
+    } catch (error) {
+      const errorMsg = handleSupabaseError(error);
+      document.getElementById('incidentsTable').innerHTML = '<p style="color: red;">Lỗi: ' + errorMsg + '</p>';
+    }
+  }
+  
+  function selectIncidentToResolve(incidentCode) {
+    currentIncidentCode = incidentCode;
+    document.getElementById('resolveIncidentCode').textContent = incidentCode;
+    document.getElementById('resolver').value = userName;
+    document.getElementById('resolveForm').classList.remove('hidden');
+    document.getElementById('resolveForm').scrollIntoView({ behavior: 'smooth' });
+  }
+  
+  function cancelResolve() {
+    document.getElementById('resolveForm').classList.add('hidden');
+    document.getElementById('resolveFormElement').reset();
+    currentIncidentCode = null;
+  }
+  
+  async function handleResolveSubmit(event) {
+    event.preventDefault();
+    
+    const resolutionData = {
+      resolver: document.getElementById('resolver').value,
+      resolution: document.getElementById('resolution').value,
+      rootCause: document.getElementById('rootCause').value
+    };
+    
+    try {
+      const { error } = await supabaseClient
+        .from('incidents')
+        .update({
+          status: 'Closed',
+          resolver: resolutionData.resolver,
+          resolution: resolutionData.resolution,
+          root_cause: resolutionData.rootCause,
+          resolve_date: new Date().toISOString()
+        })
+        .eq('incident_code', currentIncidentCode)
+        .eq('status', 'Open'); // Prevent double-closing
+      
+      if (error) throw error;
+      
+      document.getElementById('processAlert').innerHTML = '<div class="alert alert-success">✅ Đã xử lý xong sự cố: ' + currentIncidentCode + '</div>';
+      cancelResolve();
+      loadOpenIncidents();
+    } catch (error) {
+      const errorMsg = handleSupabaseError(error);
+      document.getElementById('processAlert').innerHTML = '<div class="alert alert-error">' + errorMsg + '</div>';
+    }
+  }
+  
+  // ========================================
+  // RATE INCIDENTS
+  // ========================================
+  function showRateForm() {
+    document.getElementById('rateForm').classList.remove('hidden');
+    document.getElementById('btnShowRateForm').classList.add('hidden');
+    document.getElementById('rateAlert').innerHTML = '';
+  }
+  
+  function hideRateForm() {
+    document.getElementById('rateForm').classList.add('hidden');
+    document.getElementById('btnShowRateForm').classList.remove('hidden');
+  }
+  
+  async function loadUsersForRating() {
+    try {
+      const { data: users, error } = await supabaseClient
+        .from('users')
+        .select('name')
+        .order('name', { ascending: true });
+      
+      if (error) throw error;
+      
+      const select = document.getElementById('raterName');
+      
+      // Clear existing options except the first one
+      select.innerHTML = '<option value="">-- Chọn người đánh giá --</option>';
+      
+      // Add users to dropdown
+      if (users && users.length > 0) {
+        users.forEach(user => {
+          const option = document.createElement('option');
+          option.value = user.name;
+          option.textContent = user.name;
+          
+          // Pre-select current user
+          if (user.name === userName) {
+            option.selected = true;
+          }
+          
+          select.appendChild(option);
+        });
+      }
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  }
+  
+  function getStarLabel(star) {
+    const labels = {
+      1: '⚠️ Rất không hài lòng',
+      2: '😞 Không hài lòng',
+      3: '😐 Bình thường',
+      4: '😊 Hài lòng',
+      5: '🤩 Rất hài lòng!'
+    };
+    return labels[star] || 'Nhấn sao để đánh giá';
+  }
+  
+  async function handleRateSubmit(event) {
+    event.preventDefault();
+    
+    const incidentCode = document.getElementById('rateIncidentCode').value;
+    const rating = document.getElementById('ratingValue').value;
+    const raterName = document.getElementById('raterName').value;
+    const attitudeComment = document.getElementById('attitudeComment').value;
+    
+    if (!rating) {
+      document.getElementById('rateAlert').innerHTML = '<div class="alert alert-error">Vui lòng chọn số sao!</div>';
+      return;
+    }
+    
+    try {
+      const { error } = await supabaseClient
+        .from('incidents')
+        .update({
+          rating: parseInt(rating),
+          rater_name: raterName,
+          attitude_comment: attitudeComment
+        })
+        .eq('incident_code', incidentCode)
+        .eq('status', 'Closed')
+        .is('rating', null); // Prevent double-rating
+      
+      if (error) throw error;
+      
+      document.getElementById('rateAlert').innerHTML = '<div class="alert alert-success">✅ Đánh giá thành công!</div>';
+      document.getElementById('rateForm').reset();
+      document.getElementById('ratingValue').value = '';
+      document.querySelectorAll('.star').forEach(s => s.style.color = '#ccc');
+      document.getElementById('starLabel').textContent = 'Nhấn sao để đánh giá';
+      
+      // Hide form after success
+      hideRateForm();
+    } catch (error) {
+      const errorMsg = handleSupabaseError(error);
+      document.getElementById('rateAlert').innerHTML = '<div class="alert alert-error">' + errorMsg + '</div>';
+    }
+  }
+  
+  // ========================================
+  // ADMIN - MANAGE LOCKED ACCOUNTS
+  // ========================================
+  async function loadLockedAccounts() {
+    try {
+      const { data: lockedAccounts, error } = await supabaseClient
+        .rpc('get_locked_accounts', { admin_email: userEmail });
+      
+      if (error) throw error;
+      
+      const tableDiv = document.getElementById('lockedAccountsTable');
+      
+      if (lockedAccounts && lockedAccounts.length > 0) {
+        let html = '<table style="width: 100%; border-collapse: collapse;">';
+        html += '<tr style="background: #f0f0f0; font-weight: 600;">';
+        html += '<th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Email</th>';
+        html += '<th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Tên</th>';
+        html += '<th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Bộ phận</th>';
+        html += '<th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Thời gian khóa</th>';
+        html += '<th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Lý do</th>';
+        html += '<th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Hành động</th>';
+        html += '</tr>';
+        
+        lockedAccounts.forEach(account => {
+          const lockedTime = new Date(account.locked_at).toLocaleString('vi-VN');
+          html += '<tr>';
+          html += '<td style="padding: 10px; border: 1px solid #ddd;">' + account.email + '</td>';
+          html += '<td style="padding: 10px; border: 1px solid #ddd;">' + account.name + '</td>';
+          html += '<td style="padding: 10px; border: 1px solid #ddd;">' + account.department + '</td>';
+          html += '<td style="padding: 10px; border: 1px solid #ddd;">' + lockedTime + '</td>';
+          html += '<td style="padding: 10px; border: 1px solid #ddd;">' + account.locked_reason + '</td>';
+          html += '<td style="padding: 10px; border: 1px solid #ddd; text-align: center;">';
+          html += '<button onclick="unlockUserAccount(\'' + account.email + '\')" style="background: #2e7d32; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">🔓 Mở khóa</button>';
+          html += '</td>';
+          html += '</tr>';
+        });
+        html += '</table>';
+        tableDiv.innerHTML = html;
+      } else {
+        tableDiv.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">✅ Không có tài khoản nào bị khóa</p>';
+      }
+    } catch (error) {
+      const errorMsg = handleSupabaseError(error);
+      document.getElementById('adminAlert').innerHTML = '<div class="alert alert-error">' + errorMsg + '</div>';
+      document.getElementById('lockedAccountsTable').innerHTML = '';
+    }
+  }
+  
+  async function unlockUserAccount(email) {
+    if (!confirm('Bạn có chắc muốn mở khóa tài khoản: ' + email + '?')) {
+      return;
+    }
+    
+    try {
+      const { data, error } = await supabaseClient
+        .rpc('unlock_account', {
+          user_email: email,
+          admin_email: userEmail
+        });
+      
+      if (error) throw error;
+      
+      if (data.success) {
+        document.getElementById('adminAlert').innerHTML = '<div class="alert alert-success">✅ ' + data.message + '</div>';
+        // Reload the list
+        loadLockedAccounts();
+      } else {
+        document.getElementById('adminAlert').innerHTML = '<div class="alert alert-error">❌ ' + data.message + '</div>';
+      }
+    } catch (error) {
+      const errorMsg = handleSupabaseError(error);
+      document.getElementById('adminAlert').innerHTML = '<div class="alert alert-error">' + errorMsg + '</div>';
+    }
+  }
+  
+  // ========================================
+  // EVENT LISTENERS
+  // ========================================
+  document.addEventListener('DOMContentLoaded', function() {
+    // Check session on page load
+    checkSession();
+    
+    // Login form submit
+    document.getElementById('loginForm').addEventListener('submit', handleLogin);
+    
+    // Toggle password visibility
+    document.getElementById('toggleLoginPasswordBtn').addEventListener('click', function() {
+      const passwordInput = document.getElementById('loginPassword');
+      const btn = this;
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        passwordInput.type = 'password';
+        btn.textContent = '👁';
+      }
+    });
+    
+    // Logout button
+    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    
+    // Change password button
+    document.getElementById('changePasswordBtn').addEventListener('click', showChangePasswordModal);
+    document.getElementById('cancelChangePasswordBtn').addEventListener('click', hideChangePasswordModal);
+    document.getElementById('changePasswordForm').addEventListener('submit', handleChangePassword);
+    
+    // Report form submit
+    document.getElementById('reportForm').addEventListener('submit', handleReportSubmit);
+    document.getElementById('btnShowReportForm').addEventListener('click', showReportForm);
+    
+    // QR Scanner
+    document.getElementById('btnScanDeviceCode').addEventListener('click', showQRScanner);
+    document.getElementById('cancelScanBtn').addEventListener('click', hideQRScanner);
+    
+    // Process incidents
+    document.getElementById('cancelResolveBtn').addEventListener('click', cancelResolve);
+    document.getElementById('resolveFormElement').addEventListener('submit', handleResolveSubmit);
+    
+    // Make selectIncidentToResolve available globally
+    window.selectIncidentToResolve = selectIncidentToResolve;
+    
+    // Rate form submit
+    document.getElementById('rateForm').addEventListener('submit', handleRateSubmit);
+    document.getElementById('btnShowRateForm').addEventListener('click', showRateForm);
+    
+    // Star rating handler
+    document.querySelectorAll('.star').forEach(star => {
+      star.addEventListener('click', function() {
+        const value = this.getAttribute('data-value');
+        document.getElementById('ratingValue').value = value;
+        document.getElementById('starLabel').textContent = getStarLabel(parseInt(value));
+        document.querySelectorAll('.star').forEach((s, idx) => {
+          s.style.color = (idx + 1) <= value ? '#FFD700' : '#ccc';
+        });
+      });
+    });
+    
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        const tabName = this.getAttribute('data-tab');
+        switchTab(tabName);
+      });
+    });
+    
+    // Admin tab - Refresh locked accounts button
+    const btnRefreshLockedAccounts = document.getElementById('btnRefreshLockedAccounts');
+    if (btnRefreshLockedAccounts) {
+      btnRefreshLockedAccounts.addEventListener('click', loadLockedAccounts);
+    }
+    
+    // Make unlockUserAccount available globally
+    window.unlockUserAccount = unlockUserAccount;
+  });
+</script>
+
+</body>
+</html>

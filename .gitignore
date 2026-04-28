@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Environment variables (nếu dùng .env)
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test files
+test-*.html
+
+# Backup files
+*.bak
+*~

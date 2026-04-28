@@ -1,0 +1,21 @@
+{
+  "name": "supabase-auth-migration",
+  "version": "1.0.0",
+  "description": "Migration script to create Supabase Auth users from public.users table",
+  "main": "migrate-auth-users.js",
+  "scripts": {
+    "migrate": "node migrate-auth-users.js",
+    "test": "echo \"No tests yet\""
+  },
+  "keywords": [
+    "supabase",
+    "migration",
+    "auth"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^17.4.2"
+  }
+}

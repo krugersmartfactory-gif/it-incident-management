@@ -1,0 +1,27 @@
+# Supabase Project Configuration
+
+[project]
+name = "it-incident-management"
+region = "ap-southeast-1"
+
+[database]
+port = 5432
+major_version = 15
+
+[auth]
+enabled = true
+site_url = "https://your-app-url.com"
+additional_redirect_urls = []
+jwt_expiry = 3600
+enable_signup = false
+
+[auth.email]
+enable_signup = false
+double_confirm_changes = true
+enable_confirmations = false
+
+[storage]
+enabled = false
+
+[functions]
+enabled = true

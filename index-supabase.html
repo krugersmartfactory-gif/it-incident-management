@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IT Incident Management</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f7fa; min-height: 100vh; }
+    .navbar { background: #1a73e8; color: #fff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; }
+    .navbar-brand { font-size: 18px; font-weight: 700; }
+    .btn-logout { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+    .tabs { background: #fff; border-bottom: 2px solid #e0e0e0; display: flex; padding: 0 24px; }
+    .tab { padding: 14px 24px; cursor: pointer; border-bottom: 3px solid transparent; font-weight: 600; color: #666; }
+    .tab.active { color: #1a73e8; border-bottom-color: #1a73e8; }
+    .container { max-width: 1200px; margin: 24px auto; padding: 0 24px; }
+    .tab-content { display: none; background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    .tab-content.active { display: block; }
+    .form-group { margin-bottom: 18px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 6px; }
+    input, select, textarea { width: 100%; padding: 10px 14px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #1a73e8; }
+    .btn-primary { background: #1a73e8; color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn-primary:hover { background: #1557b0; }
+    .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+    .alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+    .alert-error { background: #fdecea; color: #c62828; border: 1px solid #f5c6cb; }
+    .login-page { background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .login-box { background: #fff; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); padding: 40px 36px 32px; width: 100%; max-width: 400px; }
+    .device-page { background: #f0f4f8; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background-image: url('https://www.krugerfan.com/public/uploads/slider-2021202120212021-0909-020212120909202013.png'); background-size: cover; background-position: center; background-repeat: no-repeat; }
+    .device-box { background: rgba(255, 255, 255, 0.95); border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 40px 36px; width: 100%; max-width: 700px; backdrop-filter: blur(10px); }
+    .device-info { display: grid; gap: 14px; }
+    .info-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; background: transparent; border-radius: 0; border-bottom: 1px solid #f0f0f0; }
+    .info-label { font-size: 12px; color: #666; font-weight: 600; text-transform: uppercase; }
+    .info-value { font-size: 16px; color: #222; font-weight: 500; text-align: right; }
+    
+    /* Device Info - 2 cột (nhãn trái, giá trị phải) */
+    .device-info { display: flex; flex-direction: column; gap: 16px; }
+    .info-row-item { display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: baseline; }
+    .info-label-item { font-size: 16px; color: #666; font-weight: 600; text-transform: uppercase; white-space: nowrap; }
+    .info-value-item { font-size: 20px; color: #222; font-weight: 500; }
+    
+    /* Desktop - 2 cột */
+    @media (min-width: 769px) {
+      .device-info { gap: 18px; }
+      .info-row-item { gap: 24px; }
+      .info-label-item { font-size: 18px; }
+      .info-value-item { font-size: 22px; }
+    }
+    .hidden { display: none !important; }
+    
+    /* Severity colors */
+    .severity-cao { background: #fff3e0 !important; color: #F57C00 !important; font-weight: 600; }
+    .severity-trung-binh { background: #fffde7 !important; color: #FBC02D !important; font-weight: 600; }
+    .severity-thap { background: #e8f5e9 !important; color: #388E3C !important; font-weight: 600; }
+    
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      .navbar { flex-direction: column; gap: 12px; }
+      .navbar-brand { font-size: 16px; }
+      .tabs { flex-wrap: wrap; padding: 0 12px; }
+      .tab { padding: 10px 16px; font-size: 13px; }
+      .container { padding: 0 12px; margin: 12px auto; }
+      .tab-content { padding: 16px; border-radius: 8px; }
+      .login-box { padding: 24px 20px 16px; }
+      .device-box { padding: 24px 20px 16px; }
+      .device-info { grid-template-columns: 1fr; gap: 0; }
+      .info-labels { gap: 10px; }
+      .info-values { gap: 10px; }
+      .info-label-item { font-size: 11px; }
+      .info-value-item { font-size: 13px; }
+      input, select, textarea { padding: 8px 10px; font-size: 16px; }
+      .btn-primary { padding: 10px 16px; font-size: 14px; }
+      label { font-size: 12px; margin-bottom: 4px; }
+      .form-group { margin-bottom: 14px; }
+    }
+    
+    @media (max-width: 480px) {
+      body { font-size: 14px; }
+      .navbar-brand { font-size: 14px; }
+      .tab { padding: 8px 12px; font-size: 12px; }
+      .container { padding: 0 8px; margin: 8px auto; }
+      .tab-content { padding: 12px; }
+      h2 { font-size: 16px; margin-bottom: 12px; }
+      input, select, textarea { padding: 8px; font-size: 14px; }
+      .device-box { padding: 16px 12px; }
+      .device-info { grid-template-columns: 1fr; gap: 0; }
+      .info-label-item { font-size: 12px; }
+      .info-value-item { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage" class="login-page">
+  <div class="login-box">
+    <div style="text-align: center; margin-bottom: 24px;">
+      <h1 style="font-size: 20px; color: #1a73e8; font-weight: 700;">IT Incident Management</h1>
+    </div>
+    <div id="loginError" class="alert alert-error hidden"></div>
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="loginEmail" required>
+      </div>
+      <div class="form-group">
+        <label>Mật khẩu</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="password" id="loginPassword" required style="flex: 1;">
+          <button type="button" onclick="toggleLoginPassword()" style="background: #f0f0f0; border: 1.5px solid #ddd; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-size: 16px;">👁</button>
+        </div>
+      </div>
+      <button type="submit" class="btn-primary" style="width: 100%;">Đăng nhập</button>
+    </form>
+  </div>
+</div>
+
+<!-- DEVICE INFO PAGE -->
+<div id="deviceInfoPage" class="device-page hidden">
+  <div class="device-box">
+    <div id="deviceContent">
+      <div style="text-align: center; margin-bottom: 32px;">
+        <h2 style="color: #1a73e8; margin: 0; font-size: 20px; font-weight: 600;">IT Incident Management</h2>
+      </div>
+      
+      <!-- Thông tin thiết bị -->
+      <div id="deviceInfoSection">
+        <div class="device-info">
+          <div class="info-row-item">
+            <div class="info-label-item">Mã thiết bị</div>
+            <div class="info-value-item" id="infoCode">—</div>
+          </div>
+          <div class="info-row-item">
+            <div class="info-label-item">Tên thiết bị</div>
+            <div class="info-value-item" id="infoName">—</div>
+          </div>
+          <div class="info-row-item">
+            <div class="info-label-item">Bộ phận</div>
+            <div class="info-value-item" id="infoDept">—</div>
+          </div>
+          <div class="info-row-item">
+            <div class="info-label-item">Ngày mua</div>
+            <div class="info-value-item" id="infoPurchase">—</div>
+          </div>
+          <div class="info-row-item">
+            <div class="info-label-item">Tuổi thiết bị</div>
+            <div class="info-value-item" id="infoAge">—</div>
+          </div>
+          <div class="info-row-item">
+            <div class="info-label-item">Lần sửa chữa</div>
+            <div class="info-value-item" id="infoRepairCount">—</div>
+          </div>
+        </div>
+        
+        <!-- Thông báo đăng nhập -->
+        <div style="margin-top: 32px; padding: 24px; background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); border-radius: 12px; text-align: center; border: 2px dashed #1a73e8;">
+          <div style="font-size: 16px; color: #1a73e8; font-weight: 600; margin-bottom: 12px;">
+            🔐 Vui lòng đăng nhập
+          </div>
+          <div style="font-size: 14px; color: #666; line-height: 1.6;">
+            Để báo hỏng thiết bị hoặc xử lý sự cố, vui lòng đăng nhập bằng tài khoản của bạn
+          </div>
+          <button onclick="showDeviceLoginForm()" style="margin-top: 16px; padding: 12px 32px; background: #1a73e8; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);">
+            Đăng nhập ngay
+          </button>
+        </div>
+      </div>
+      
+      <!-- Form login (ẩn ban đầu) -->
+      <div id="deviceLoginSection" class="hidden" style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin-top: 24px;">
+        <h3 style="margin-top: 0; color: #1a73e8;">Đăng nhập để báo hỏng</h3>
+        <div id="deviceLoginError" class="alert alert-error hidden"></div>
+        <form id="deviceLoginForm" onsubmit="handleDeviceLogin(event)">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="deviceLoginEmail" required>
+          </div>
+          <div class="form-group">
+            <label>Mật khẩu</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="password" id="deviceLoginPassword" required style="flex: 1;">
+              <button type="button" onclick="toggleDeviceLoginPassword()" style="background: #f0f0f0; border: 1.5px solid #ddd; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-size: 16px;">👁</button>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" style="width: 100%;">Đăng nhập</button>
+          <button type="button" onclick="cancelDeviceLogin()" style="width: 100%; margin-top: 8px; padding: 12px 24px; background: #ccc; color: #333; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">Hủy</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" class="hidden">
+  <nav class="navbar">
+    <div class="navbar-brand">🛠️ IT Incident Management</div>
+    <div>
+      <span>Xin chào, <strong id="userNameDisplay">—</strong></span>
+      <button class="btn-logout" onclick="showChangePasswordModal()" style="margin-left: 12px;">🔑 Đổi mật khẩu</button>
+      <button class="btn-logout" onclick="handleLogout()" style="margin-left: 8px;">Đăng xuất</button>
+    </div>
+  </nav>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('report')">📝 Báo hỏng</div>
+    <div class="tab" onclick="switchTab('process')">⚙️ Xử lý sự cố</div>
+    <div class="tab" onclick="switchTab('rate')">⭐ Đánh giá</div>
+  </div>
+
+  <div class="container">
+    <!-- Tab 1: Báo hỏng -->
+    <div id="tabReport" class="tab-content active">
+      <h2 style="margin-bottom:20px;">Báo hỏng thiết bị</h2>
+      <div id="reportAlert"></div>
+      
+      <!-- Nút mở form (ẩn ban đầu) -->
+      <button id="btnShowReportForm" class="btn-primary hidden" onclick="showReportForm()" style="width: 100%; margin-bottom: 20px;">
+        📝 Báo hỏng thiết bị mới
+      </button>
+      
+      <form id="reportForm">
+        <div class="form-group">
+          <label>Mã thiết bị *</label>
+          <input type="text" id="deviceCode" required readonly>
+        </div>
+        <div class="form-group">
+          <label>Tên thiết bị</label>
+          <input type="text" id="deviceName" readonly>
+        </div>
+        <div class="form-group">
+          <label>Người dùng</label>
+          <input type="text" id="userName" readonly>
+        </div>
+        <div class="form-group">
+          <label>Bộ phận</label>
+          <input type="text" id="department" readonly>
+        </div>
+        <div class="form-group">
+          <label>Mô tả sự cố *</label>
+          <textarea id="description" required style="min-height: 100px;"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Mức độ *</label>
+          <select id="severity" required style="width: 100%;">
+            <option value="">-- Chọn mức độ --</option>
+            <option value="Cao">Cao</option>
+            <option value="Trung bình">Trung bình</option>
+            <option value="Thấp">Thấp</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%;">Gửi báo hỏng</button>
+      </form>
+    </div>
+
+    <!-- Tab 2: Xử lý sự cố -->
+    <div id="tabProcess" class="tab-content">
+      <h2 style="margin-bottom:20px;">Xử lý sự cố</h2>
+      <div id="processAlert"></div>
+      <div id="incidentsTable" style="overflow-x: auto;"></div>
+      
+      <!-- Form xử lý sự cố (ẩn ban đầu) -->
+      <div id="resolveForm" class="hidden" style="margin-top: 24px; padding: 20px; background: #f9f9f9; border-radius: 8px;">
+        <h3 style="margin-top: 0;">Xử lý sự cố: <span id="resolveIncidentCode"></span></h3>
+        <form id="resolveFormElement">
+          <div class="form-group">
+            <label>Người xử lý *</label>
+            <input type="text" id="resolver" required>
+          </div>
+          <div class="form-group">
+            <label>Kết quả xử lý *</label>
+            <textarea id="resolution" required style="min-height: 100px;"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Nguyên nhân gốc rễ</label>
+            <textarea id="rootCause" style="min-height: 80px;"></textarea>
+          </div>
+          <button type="submit" class="btn-primary">Hoàn thành xử lý</button>
+          <button type="button" onclick="cancelResolve()" style="margin-left: 8px; padding: 12px 24px; background: #ccc; color: #333; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">Hủy</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tab 3: Đánh giá -->
+    <div id="tabRate" class="tab-content">
+      <h2 style="margin-bottom:20px;">Đánh giá chất lượng xử lý</h2>
+      <div id="rateAlert"></div>
+      <div id="unratedIncidentsSection" style="margin-bottom: 24px;"></div>
+      <form id="rateForm">
+        <div class="form-group">
+          <label>Mã sự cố *</label>
+          <input type="text" id="rateIncidentCode" required>
+        </div>
+        <div class="form-group">
+          <label>Đánh giá *</label>
+          <div style="display: flex; gap: 8px; font-size: 32px; cursor: pointer;">
+            <span class="star" data-value="1">★</span>
+            <span class="star" data-value="2">★</span>
+            <span class="star" data-value="3">★</span>
+            <span class="star" data-value="4">★</span>
+            <span class="star" data-value="5">★</span>
+          </div>
+          <div id="starLabel" style="margin-top: 8px; font-size: 14px; color: #666; min-height: 20px;">Nhấn sao để đánh giá</div>
+          <input type="hidden" id="ratingValue" required>
+        </div>
+        <div class="form-group">
+          <label>Nhận xét thái độ người xử lý</label>
+          <textarea id="attitudeComment" placeholder="Ví dụ: Nhiệt tình, hỗ trợ tốt..." style="min-height: 80px;"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Tên người đánh giá *</label>
+          <input type="text" id="raterName" required>
+        </div>
+        <button type="submit" class="btn-primary">Gửi đánh giá</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ĐỔI MẬT KHẨU -->
+<div id="changePasswordModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+  <div style="background: #fff; border-radius: 12px; padding: 32px; width: 100%; max-width: 400px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
+    <h2 style="margin-top: 0; color: #1a73e8;">🔑 Đổi mật khẩu</h2>
+    <div id="changePasswordAlert"></div>
+    <form id="changePasswordForm">
+      <div class="form-group">
+        <label>Mật khẩu cũ *</label>
+        <input type="password" id="oldPassword" required>
+      </div>
+      <div class="form-group">
+        <label>Mật khẩu mới * (tối thiểu 6 ký tự)</label>
+        <input type="password" id="newPassword" required minlength="6">
+      </div>
+      <div class="form-group">
+        <label>Xác nhận mật khẩu mới *</label>
+        <input type="password" id="confirmPassword" required minlength="6">
+      </div>
+      <button type="submit" class="btn-primary" style="width: 100%;">Đổi mật khẩu</button>
+      <button type="button" onclick="hideChangePasswordModal()" style="width: 100%; margin-top: 8px; padding: 12px 24px; background: #ccc; color: #333; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">Hủy</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  let sessionToken = null;
+  let userName = null;
+  let department = null;
+  let deviceList = [];
+  let currentDeviceCode = null;
+  let userFormAccess = '';
+  let userEmail = '';
+
+  // MAIN LOGIC: Check URL for ?id parameter
+  function init() {
+    // Get the REAL URL from Google Apps Script
+    google.script.url.getLocation(function(location) {
+      console.log('🔍 Location from GAS:', location);
+      console.log('🔍 Parameters object:', location.parameters);
+      
+      let deviceCode = null;
+      
+      // GAS provides parameters as an object, not a search string
+      // location.parameters.id can be a string or array
+      if (location.parameters && location.parameters.id) {
+        // Handle both string and array cases
+        deviceCode = Array.isArray(location.parameters.id) 
+          ? location.parameters.id[0] 
+          : location.parameters.id;
+        deviceCode = String(deviceCode).trim();
+        console.log('✅ Device code from location.parameters:', deviceCode);
+      }
+      
+      if (deviceCode) {
+        console.log('✅ Loading device info for:', deviceCode);
+        currentDeviceCode = deviceCode;
+        
+        // Hiển thị Device Info Page NGAY LẬP TỨC (không chờ backend)
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('mainApp').classList.add('hidden');
+        document.getElementById('deviceInfoPage').classList.remove('hidden');
+        document.getElementById('deviceInfoSection').classList.remove('hidden');
+        document.getElementById('deviceLoginSection').classList.add('hidden');
+        
+        // Hiển thị loading state
+        document.getElementById('infoCode').textContent = 'Đang tải...';
+        document.getElementById('infoName').textContent = '—';
+        document.getElementById('infoDept').textContent = '—';
+        document.getElementById('infoPurchase').textContent = '—';
+        document.getElementById('infoAge').textContent = '—';
+        document.getElementById('infoRepairCount').textContent = '—';
+        
+        // Gọi backend để lấy dữ liệu device (async, không block UI)
+        google.script.run
+          .withSuccessHandler(function(result) {
+            console.log('📱 getDeviceList result:', result);
+            if (result && result.success && result.devices) {
+              // Tìm device trong danh sách
+              const device = result.devices.find(d => d.code.toLowerCase() === deviceCode.toLowerCase());
+              if (device) {
+                console.log('✅ Found device:', device);
+                // Lưu vào sessionStorage
+                sessionStorage.setItem('currentDevice', JSON.stringify(device));
+                
+                // Cập nhật UI với device info
+                document.getElementById('infoCode').textContent = device.code || '—';
+                document.getElementById('infoName').textContent = device.name || '—';
+                document.getElementById('infoDept').textContent = device.department || '—';
+                document.getElementById('infoPurchase').textContent = device.purchaseDate || '—';
+                
+                // Tính tuổi thiết bị (mỗi tháng = 1 tuổi)
+                var deviceAge = calculateDeviceAgeInMonths(device.purchaseDate);
+                document.getElementById('infoAge').textContent = deviceAge;
+                
+                // Lấy số lần sửa chữa
+                google.script.run
+                  .withSuccessHandler(function(repairResult) {
+                    console.log('📱 getRepairCount result:', repairResult);
+                    if (repairResult && repairResult.success) {
+                      sessionStorage.setItem('repairCount', repairResult.count);
+                      document.getElementById('infoRepairCount').textContent = repairResult.count + ' lần';
+                    }
+                  })
+                  .withFailureHandler(function(error) {
+                    console.error('❌ Error getting repair count:', error);
+                    sessionStorage.setItem('repairCount', '0');
+                    document.getElementById('infoRepairCount').textContent = '0 lần';
+                  })
+                  .getRepairCount(device.code);
+              } else {
+                console.error('❌ Device not found in list');
+                document.getElementById('infoCode').textContent = 'Lỗi: Không tìm thấy thiết bị';
+              }
+            } else {
+              console.error('❌ Error loading device list');
+              document.getElementById('infoCode').textContent = 'Lỗi: ' + (result.error || 'Không thể tải dữ liệu');
+            }
+          })
+          .withFailureHandler(function(error) {
+            console.error('❌ Error:', error);
+            document.getElementById('infoCode').textContent = 'Lỗi: ' + error;
+          })
+          .getDeviceList();
+      } else {
+        console.log('❌ No device code found, checking session');
+        checkSession();
+      }
+    });
+  }
+  
+  function showDeviceInfoPage() {
+    const device = JSON.parse(sessionStorage.getItem('currentDevice') || '{}');
+    const repairCount = sessionStorage.getItem('repairCount') || '0';
+    
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('mainApp').classList.add('hidden');
+    document.getElementById('deviceInfoPage').classList.remove('hidden');
+    document.getElementById('deviceInfoSection').classList.remove('hidden');
+    document.getElementById('deviceLoginSection').classList.add('hidden');
+    
+    document.getElementById('infoCode').textContent = device.code || '—';
+    document.getElementById('infoName').textContent = device.name || '—';
+    document.getElementById('infoDept').textContent = device.department || '—';
+    document.getElementById('infoPurchase').textContent = device.purchaseDate || '—';
+    document.getElementById('infoAge').textContent = '—';
+    document.getElementById('infoRepairCount').textContent = repairCount + ' lần';
+    
+    console.log('✅ Device info page displayed');
+  }
+  
+  function showDeviceInfoPageError(error) {
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('mainApp').classList.add('hidden');
+    document.getElementById('deviceInfoPage').classList.remove('hidden');
+    document.getElementById('deviceInfoSection').classList.remove('hidden');
+    document.getElementById('deviceLoginSection').classList.add('hidden');
+    document.getElementById('infoCode').textContent = 'Lỗi: ' + error;
+  }
+
+  function checkSession() {
+    sessionToken = sessionStorage.getItem('token');
+    if (!sessionToken) {
+      // Kiểm tra xem có đang ở device info page không (có ?id parameter)
+      google.script.url.getLocation(function(location) {
+        if (location.parameters && location.parameters.id) {
+          // Có device code → reload lại device info page
+          var deviceCode = Array.isArray(location.parameters.id) 
+            ? location.parameters.id[0] 
+            : location.parameters.id;
+          currentDeviceCode = String(deviceCode).trim();
+          init(); // Reload device info
+        } else {
+          // Không có device code → hiển thị login page
+          showLoginPage();
+        }
+      });
+      return;
+    }
+    google.script.run.validateSession(sessionToken).withSuccessHandler(function(result) {
+      if (result.valid) {
+        userName = result.userName;
+        department = result.department;
+        userFormAccess = result.formAccess || 'báo hỏng, xử lý, đánh giá';
+        userEmail = result.email || '';
+        showMainApp();
+      } else {
+        // Session không hợp lệ → kiểm tra device info page
+        google.script.url.getLocation(function(location) {
+          if (location.parameters && location.parameters.id) {
+            var deviceCode = Array.isArray(location.parameters.id) 
+              ? location.parameters.id[0] 
+              : location.parameters.id;
+            currentDeviceCode = String(deviceCode).trim();
+            init();
+          } else {
+            showLoginPage();
+          }
+        });
+      }
+    }).withFailureHandler(function() {
+      showLoginPage();
+    });
+  }
+
+  function showLoginPage() {
+    document.getElementById('loginPage').classList.remove('hidden');
+    document.getElementById('mainApp').classList.add('hidden');
+    document.getElementById('deviceInfoPage').classList.add('hidden');
+  }
+
+  function showMainApp() {
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('mainApp').classList.remove('hidden');
+    document.getElementById('deviceInfoPage').classList.add('hidden');
+    document.getElementById('userNameDisplay').textContent = userName;
+    document.getElementById('userName').value = userName;
+    document.getElementById('department').value = department;
+    document.getElementById('raterName').value = userName;
+    
+    // Lấy formAccess từ sessionStorage
+    userFormAccess = sessionStorage.getItem('formAccess') || 'báo hỏng, xử lý, đánh giá';
+    userEmail = sessionStorage.getItem('email') || '';
+    
+    // Ẩn/hiện tab theo quyền
+    applyFormAccessPermissions();
+    
+    // Device list sẽ được load từ handleDeviceLogin() hoặc handleReportClick()
+    // Không gọi loadDeviceList() ở đây để tránh race condition
+    
+    // Add severity color handler
+    const severitySelect = document.getElementById('severity');
+    if (severitySelect) {
+      severitySelect.addEventListener('change', function() {
+        applySeverityColor(this);
+      });
+    }
+  }
+  
+  function applyFormAccessPermissions() {
+    const formAccess = userFormAccess.toLowerCase();
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    // Ẩn tất cả tabs trước
+    tabs.forEach(tab => tab.style.display = 'none');
+    
+    // Hiện tabs theo quyền
+    if (formAccess.includes('báo hỏng')) {
+      tabs[0].style.display = 'block'; // Tab Báo hỏng
+    }
+    if (formAccess.includes('xử lý')) {
+      tabs[1].style.display = 'block'; // Tab Xử lý sự cố
+    }
+    if (formAccess.includes('đánh giá')) {
+      tabs[2].style.display = 'block'; // Tab Đánh giá
+    }
+    
+    // Chuyển đến tab đầu tiên có quyền
+    if (formAccess.includes('báo hỏng')) {
+      switchTab('report');
+    } else if (formAccess.includes('xử lý')) {
+      switchTab('process');
+    } else if (formAccess.includes('đánh giá')) {
+      switchTab('rate');
+    }
+  }
+  
+  function showChangePasswordModal() {
+    document.getElementById('changePasswordModal').classList.remove('hidden');
+    document.getElementById('changePasswordForm').reset();
+    document.getElementById('changePasswordAlert').innerHTML = '';
+  }
+  
+  function hideChangePasswordModal() {
+    document.getElementById('changePasswordModal').classList.add('hidden');
+    document.getElementById('changePasswordForm').reset();
+    document.getElementById('changePasswordAlert').innerHTML = '';
+  }
+  
+  function handleChangePassword(event) {
+    event.preventDefault();
+    
+    const oldPassword = document.getElementById('oldPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (newPassword !== confirmPassword) {
+      document.getElementById('changePasswordAlert').innerHTML = '<div class="alert alert-error">Mật khẩu mới và xác nhận không khớp!</div>';
+      return;
+    }
+    
+    if (newPassword.length < 6) {
+      document.getElementById('changePasswordAlert').innerHTML = '<div class="alert alert-error">Mật khẩu mới phải có ít nhất 6 ký tự!</div>';
+      return;
+    }
+    
+    google.script.run
+      .withSuccessHandler(function(result) {
+        if (result.success) {
+          document.getElementById('changePasswordAlert').innerHTML = '<div class="alert alert-success">✅ Đổi mật khẩu thành công!</div>';
+          setTimeout(function() {
+            hideChangePasswordModal();
+          }, 2000);
+        } else {
+          document.getElementById('changePasswordAlert').innerHTML = '<div class="alert alert-error">' + result.error + '</div>';
+        }
+      })
+      .withFailureHandler(function(error) {
+        document.getElementById('changePasswordAlert').innerHTML = '<div class="alert alert-error">Lỗi: ' + error + '</div>';
+      })
+      .changePassword(userEmail, oldPassword, newPassword, sessionToken);
+  }
+  
+  function applySeverityColor(selectElement) {
+    const value = selectElement.value;
+    selectElement.classList.remove('severity-cao', 'severity-trung-binh', 'severity-thap');
+    
+    if (value === 'Cao') {
+      selectElement.classList.add('severity-cao');
+    } else if (value === 'Trung bình') {
+      selectElement.classList.add('severity-trung-binh');
+    } else if (value === 'Thấp') {
+      selectElement.classList.add('severity-thap');
+    }
+  }
+  
+  function showReportForm() {
+    document.getElementById('reportForm').classList.remove('hidden');
+    document.getElementById('btnShowReportForm').classList.add('hidden');
+    document.getElementById('reportAlert').innerHTML = '';
+  }
+  
+  function hideReportForm() {
+    document.getElementById('reportForm').classList.add('hidden');
+    document.getElementById('btnShowReportForm').classList.remove('hidden');
+  }
+
+  function toggleLoginPassword() {
+    const input = document.getElementById('loginPassword');
+    const btn = event.target;
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      btn.textContent = '👁';
+    }
+  }
+
+  function handleLogin(event) {
+    event.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    // Delay để đảm bảo google.script.run sẵn sàng
+    setTimeout(function() {
+      google.script.run.withSuccessHandler(function(result) {
+        console.log('✅ Login result:', result);
+        if (result.success) {
+          sessionStorage.setItem('token', result.token);
+          sessionStorage.setItem('userName', result.userName);
+          sessionStorage.setItem('department', result.department);
+          sessionStorage.setItem('formAccess', result.formAccess || 'báo hỏng, xử lý, đánh giá');
+          sessionStorage.setItem('email', email);
+          userName = result.userName;
+          department = result.department;
+          sessionToken = result.token;
+          userFormAccess = result.formAccess || 'báo hỏng, xử lý, đánh giá';
+          userEmail = email;
+          showMainApp();
+          
+          // Load device list sau khi hiển thị main app
+          loadDeviceList();
+        } else {
+          console.error('❌ Login failed:', result.error);
+          document.getElementById('loginError').textContent = result.error;
+          document.getElementById('loginError').classList.remove('hidden');
+        }
+      }).withFailureHandler(function(error) {
+        console.error('❌ Backend error:', error);
+        document.getElementById('loginError').textContent = 'Lỗi hệ thống: ' + error;
+        document.getElementById('loginError').classList.remove('hidden');
+      }).loginUser(email, password);
+    }, 300);
+  }
+
+
+
+  function handleReportClick() {
+    const token = sessionStorage.getItem('token');
+    if (token) {
+      // Đã login - chuyển sang tab báo hỏng
+      sessionToken = token;
+      userName = sessionStorage.getItem('userName');
+      department = sessionStorage.getItem('department');
+      userFormAccess = sessionStorage.getItem('formAccess') || 'báo hỏng, xử lý, đánh giá';
+      userEmail = sessionStorage.getItem('email') || '';
+      showMainApp();
+      
+      // Chờ device list load xong rồi mới chọn device
+      loadDeviceList(function() {
+        console.log('📱 Device list loaded, switching to report tab');
+        switchTab('report');
+      });
+    } else {
+      // Chưa login - hiển thị form login ở device info page
+      document.getElementById('deviceInfoSection').classList.add('hidden');
+      document.getElementById('deviceLoginSection').classList.remove('hidden');
+    }
+  }
+  
+  function toggleDeviceLoginPassword() {
+    const input = document.getElementById('deviceLoginPassword');
+    const btn = event.target;
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      btn.textContent = '👁';
+    }
+  }
+  
+  function cancelDeviceLogin() {
+    document.getElementById('deviceInfoSection').classList.remove('hidden');
+    document.getElementById('deviceLoginSection').classList.add('hidden');
+    document.getElementById('deviceLoginForm').reset();
+    document.getElementById('deviceLoginError').classList.add('hidden');
+  }
+  
+  function showDeviceLoginForm() {
+    document.getElementById('deviceInfoSection').classList.add('hidden');
+    document.getElementById('deviceLoginSection').classList.remove('hidden');
+  }
+  
+  function handleDeviceLogin(event) {
+    event.preventDefault();
+    const email = document.getElementById('deviceLoginEmail').value;
+    const password = document.getElementById('deviceLoginPassword').value;
+    
+    setTimeout(function() {
+      google.script.run
+        .withSuccessHandler(function(result) {
+          console.log('✅ Device login result:', result);
+          if (result.success) {
+            sessionStorage.setItem('token', result.token);
+            sessionStorage.setItem('userName', result.userName);
+            sessionStorage.setItem('department', result.department);
+            sessionStorage.setItem('formAccess', result.formAccess || 'báo hỏng, xử lý, đánh giá');
+            sessionStorage.setItem('email', email);
+            userName = result.userName;
+            department = result.department;
+            sessionToken = result.token;
+            userFormAccess = result.formAccess || 'báo hỏng, xử lý, đánh giá';
+            userEmail = email;
+            
+            // Chuyển sang tab báo hỏng
+            showMainApp();
+            
+            // Chờ device list load xong rồi mới chọn device
+            // loadDeviceList sẽ auto-select device nếu currentDeviceCode tồn tại
+            // Sau đó gọi callback để switch tab
+            loadDeviceList(function() {
+              console.log('📱 Device list loaded, switching to report tab');
+              switchTab('report');
+            });
+          } else {
+            console.error('❌ Login failed:', result.error);
+            document.getElementById('deviceLoginError').textContent = result.error;
+            document.getElementById('deviceLoginError').classList.remove('hidden');
+          }
+        })
+        .withFailureHandler(function(error) {
+          console.error('❌ Backend error:', error);
+          document.getElementById('deviceLoginError').textContent = 'Lỗi hệ thống: ' + error;
+          document.getElementById('deviceLoginError').classList.remove('hidden');
+        })
+        .loginUser(email, password);
+    }, 300);
+  }
+
+  function loadDeviceList(callback) {
+    console.log('📱 loadDeviceList called');
+    console.log('📱 currentDeviceCode:', currentDeviceCode);
+    
+    // Nếu có currentDeviceCode từ QR scan, chỉ cần set giá trị trực tiếp
+    if (currentDeviceCode) {
+      const device = JSON.parse(sessionStorage.getItem('currentDevice') || '{}');
+      if (device.code) {
+        console.log('📱 Setting device from sessionStorage:', device);
+        document.getElementById('deviceCode').value = device.code;
+        document.getElementById('deviceName').value = device.name;
+        
+        if (callback) {
+          console.log('📱 Calling callback');
+          callback();
+        }
+        return;
+      }
+    }
+    
+    // Nếu không có currentDeviceCode, không cần load gì cả
+    console.log('⚠️ No currentDeviceCode, skipping device list load');
+    if (callback) callback();
+  }
+
+
+
+  function loadOpenIncidents() {
+    setTimeout(function() {
+      google.script.run.withSuccessHandler(function(result) {
+        console.log('📋 Open incidents:', result);
+        if (result.success && result.incidents.length > 0) {
+          let html = '<table style="width: 100%; border-collapse: collapse;">';
+          html += '<tr style="background: #f0f0f0; font-weight: 600;">';
+          html += '<th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Mã sự cố</th>';
+          html += '<th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Thiết bị</th>';
+          html += '<th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Mô tả</th>';
+          html += '<th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Mức độ</th>';
+          html += '<th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Hành động</th>';
+          html += '</tr>';
+          
+          result.incidents.forEach(inc => {
+            const severityColor = inc.severity === 'Cao' ? '#d32f2f' : (inc.severity === 'Trung bình' ? '#F57C00' : '#388E3C');
+            html += '<tr>';
+            html += '<td style="padding: 10px; border: 1px solid #ddd;"><strong>' + inc.incidentCode + '</strong></td>';
+            html += '<td style="padding: 10px; border: 1px solid #ddd;">' + inc.deviceCode + '</td>';
+            html += '<td style="padding: 10px; border: 1px solid #ddd;">' + inc.description.substring(0, 50) + '...</td>';
+            html += '<td style="padding: 10px; border: 1px solid #ddd; color: ' + severityColor + '; font-weight: 600;">' + inc.severity + '</td>';
+            html += '<td style="padding: 10px; border: 1px solid #ddd; text-align: center;"><button onclick="selectIncidentToResolve(\'' + inc.incidentCode + '\')" style="background: #1a73e8; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">Xử lý</button></td>';
+            html += '</tr>';
+          });
+          html += '</table>';
+          document.getElementById('incidentsTable').innerHTML = html;
+        } else {
+          document.getElementById('incidentsTable').innerHTML = '<p style="text-align: center; color: #999;">Không có sự cố nào cần xử lý</p>';
+        }
+      }).withFailureHandler(function(error) {
+        console.error('❌ Error loading incidents:', error);
+        document.getElementById('incidentsTable').innerHTML = '<p style="color: red;">Lỗi: ' + error + '</p>';
+      }).getOpenIncidents(sessionToken);
+    }, 300);
+  }
+  
+  let currentIncidentCode = null;
+  
+  function selectIncidentToResolve(incidentCode) {
+    console.log('🔧 Selecting incident to resolve:', incidentCode);
+    currentIncidentCode = incidentCode;
+    document.getElementById('resolveIncidentCode').textContent = incidentCode;
+    document.getElementById('resolver').value = userName;
+    document.getElementById('resolveForm').classList.remove('hidden');
+    document.getElementById('resolveForm').scrollIntoView({ behavior: 'smooth' });
+  }
+  
+  function cancelResolve() {
+    document.getElementById('resolveForm').classList.add('hidden');
+    document.getElementById('resolveFormElement').reset();
+    currentIncidentCode = null;
+  }
+  
+  function handleResolveSubmit(event) {
+    event.preventDefault();
+    console.log('🔧 handleResolveSubmit called');
+    
+    const resolutionData = {
+      resolver: document.getElementById('resolver').value,
+      resolution: document.getElementById('resolution').value,
+      rootCause: document.getElementById('rootCause').value
+    };
+    
+    console.log('🔧 Resolving incident:', currentIncidentCode, resolutionData);
+    
+    google.script.run
+      .withSuccessHandler(function(result) {
+        console.log('✅ Resolve result:', result);
+        if (result.success) {
+          document.getElementById('processAlert').innerHTML = '<div class="alert alert-success">✅ Đã xử lý xong sự cố: ' + result.incidentCode + '</div>';
+          cancelResolve();
+          loadOpenIncidents();
+        } else {
+          document.getElementById('processAlert').innerHTML = '<div class="alert alert-error">' + result.error + '</div>';
+        }
+      })
+      .withFailureHandler(function(error) {
+        console.error('❌ Resolve error:', error);
+        document.getElementById('processAlert').innerHTML = '<div class="alert alert-error">Lỗi: ' + error + '</div>';
+      })
+      .resolveIncident(currentIncidentCode, resolutionData, sessionToken);
+  }
+
+  function loadUnratedIncidents() {
+    if (!currentDeviceCode) return;
+    setTimeout(function() {
+      google.script.run.withSuccessHandler(function(result) {
+        console.log('⭐ Unrated incidents:', result);
+        if (result.success && result.incidents.length > 0) {
+          let html = '<h3 style="margin-bottom: 16px;">Các sự cố chưa được đánh giá:</h3>';
+          html += '<div style="display: grid; gap: 12px;">';
+          result.incidents.forEach(inc => {
+            html += '<div style="background: #f9f9f9; padding: 12px; border-radius: 8px; border-left: 4px solid #1a73e8; cursor: pointer;" onclick="selectIncidentToRate(\'' + inc.incidentCode + '\')">';
+            html += '<strong>' + inc.incidentCode + '</strong> - ' + inc.deviceCode + ' - ' + inc.description.substring(0, 40) + '...';
+            html += '</div>';
+          });
+          html += '</div>';
+          document.getElementById('unratedIncidentsSection').innerHTML = html;
+        } else {
+          document.getElementById('unratedIncidentsSection').innerHTML = '';
+        }
+      }).withFailureHandler(function(error) {
+        console.error('❌ Error loading unrated incidents:', error);
+      }).getUnratedIncidentsByDevice(currentDeviceCode);
+    }, 300);
+  }
+
+  function selectIncidentToRate(incidentCode) {
+    document.getElementById('rateIncidentCode').value = incidentCode;
+    document.getElementById('rateIncidentCode').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    if (tab === 'report') {
+      document.querySelectorAll('.tab')[0].classList.add('active');
+      document.getElementById('tabReport').classList.add('active');
+    } else if (tab === 'process') {
+      document.querySelectorAll('.tab')[1].classList.add('active');
+      document.getElementById('tabProcess').classList.add('active');
+      loadOpenIncidents();
+    } else if (tab === 'rate') {
+      document.querySelectorAll('.tab')[2].classList.add('active');
+      document.getElementById('tabRate').classList.add('active');
+      loadUnratedIncidents();
+    }
+  }
+
+  function handleReportSubmit(event) {
+    event.preventDefault();
+    console.log('📝 handleReportSubmit called');
+    
+    const data = {
+      userName: userName,
+      department: department,
+      deviceCode: document.getElementById('deviceCode').value,
+      deviceName: document.getElementById('deviceName').value,
+      description: document.getElementById('description').value,
+      severity: document.getElementById('severity').value
+    };
+    
+    console.log('📝 Submitting incident data:', data);
+    console.log('📝 Session token:', sessionToken);
+    
+    google.script.run
+      .withSuccessHandler(function(result) {
+        console.log('✅ Submit result:', result);
+        if (result.success) {
+          document.getElementById('reportAlert').innerHTML = '<div class="alert alert-success">✅ Báo hỏng thành công! Mã sự cố: <strong>' + result.incidentCode + '</strong><br>Bộ phận IT sẽ xử lý trong thời gian sớm nhất.</div>';
+          document.getElementById('reportForm').reset();
+          
+          // Ẩn form và hiển thị nút "Báo hỏng mới"
+          hideReportForm();
+        } else {
+          document.getElementById('reportAlert').innerHTML = '<div class="alert alert-error">' + result.error + '</div>';
+        }
+      })
+      .withFailureHandler(function(error) {
+        console.error('❌ Submit error:', error);
+        document.getElementById('reportAlert').innerHTML = '<div class="alert alert-error">Lỗi: ' + error + '</div>';
+      })
+      .submitIncident(data, sessionToken);
+  }
+
+  function handleLogout() {
+    // Lưu lại currentDeviceCode trước khi clear session (nếu có)
+    const deviceCode = currentDeviceCode;
+    const device = sessionStorage.getItem('currentDevice');
+    const repairCount = sessionStorage.getItem('repairCount');
+    
+    // Xóa session
+    sessionStorage.clear();
+    
+    // Nếu có device code (đang ở device info mode), khôi phục lại và hiển thị device info page
+    if (deviceCode) {
+      currentDeviceCode = deviceCode;
+      if (device) sessionStorage.setItem('currentDevice', device);
+      if (repairCount) sessionStorage.setItem('repairCount', repairCount);
+      
+      // Hiển thị device info page trực tiếp (không reload)
+      showDeviceInfoPage();
+    } else {
+      // Không có device code → reload về login page
+      window.location.reload();
+    }
+  }
+
+  function getStarLabel(star) {
+    var labels = {
+      1: '⚠️ Rất không hài lòng',
+      2: '😞 Không hài lòng',
+      3: '😐 Bình thường',
+      4: '😊 Hài lòng',
+      5: '🤩 Rất hài lòng!'
+    };
+    return labels[star] || 'Nhấn sao để đánh giá';
+  }
+  
+  function calculateDeviceAgeInMonths(purchaseDateStr) {
+    if (!purchaseDateStr || purchaseDateStr === '—') return '—';
+    
+    try {
+      // Parse date format DD/MM/YYYY
+      var parts = purchaseDateStr.split('/');
+      if (parts.length !== 3) return '—';
+      
+      var day = parseInt(parts[0], 10);
+      var month = parseInt(parts[1], 10);
+      var year = parseInt(parts[2], 10);
+      
+      if (isNaN(day) || isNaN(month) || isNaN(year)) return '—';
+      
+      var purchaseDate = new Date(year, month - 1, day);
+      var today = new Date();
+      
+      // Tính số tháng chênh lệch
+      var months = (today.getFullYear() - purchaseDate.getFullYear()) * 12;
+      months += today.getMonth() - purchaseDate.getMonth();
+      
+      // Nếu ngày hiện tại < ngày mua trong tháng, trừ đi 1 tháng
+      if (today.getDate() < purchaseDate.getDate()) {
+        months--;
+      }
+      
+      if (months < 0) return '0 tuổi';
+      if (months === 0) return '0 tuổi';
+      
+      return months + ' tuổi';
+    } catch (e) {
+      console.error('Error calculating device age:', e);
+      return '—';
+    }
+  }
+
+  function handleRateSubmit(event) {
+    event.preventDefault();
+    const incidentCode = document.getElementById('rateIncidentCode').value;
+    const rating = document.getElementById('ratingValue').value;
+    const raterName = document.getElementById('raterName').value;
+    const attitudeComment = document.getElementById('attitudeComment').value;
+    
+    if (!rating) {
+      document.getElementById('rateAlert').innerHTML = '<div class="alert alert-error">Vui lòng chọn số sao!</div>';
+      return;
+    }
+    
+    setTimeout(function() {
+      google.script.run.withSuccessHandler(function(result) {
+        if (result.success) {
+          document.getElementById('rateAlert').innerHTML = '<div class="alert alert-success">✅ Đánh giá thành công!</div>';
+          document.getElementById('rateForm').reset();
+          document.getElementById('ratingValue').value = '';
+          document.querySelectorAll('.star').forEach(s => s.style.color = '#ccc');
+          loadUnratedIncidents();
+        } else {
+          document.getElementById('rateAlert').innerHTML = '<div class="alert alert-error">' + result.error + '</div>';
+        }
+      }).withFailureHandler(function(error) {
+        document.getElementById('rateAlert').innerHTML = '<div class="alert alert-error">Lỗi: ' + error + '</div>';
+      }).rateIncident(incidentCode, rating, raterName, attitudeComment, sessionToken);
+    }, 300);
+  }
+
+  // Star rating handler
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.star').forEach(star => {
+      star.addEventListener('click', function() {
+        const value = this.getAttribute('data-value');
+        document.getElementById('ratingValue').value = value;
+        document.getElementById('starLabel').textContent = getStarLabel(parseInt(value));
+        document.querySelectorAll('.star').forEach((s, idx) => {
+          s.style.color = (idx + 1) <= value ? '#FFD700' : '#ccc';
+        });
+      });
+    });
+  });
+
+  // Initialize on load
+  window.addEventListener('load', function() {
+    init();
+    
+    // Add event listener for report form
+    const reportForm = document.getElementById('reportForm');
+    if (reportForm) {
+      reportForm.addEventListener('submit', handleReportSubmit);
+    }
+    
+    // Add event listener for resolve form
+    const resolveFormElement = document.getElementById('resolveFormElement');
+    if (resolveFormElement) {
+      resolveFormElement.addEventListener('submit', handleResolveSubmit);
+    }
+    
+    // Add event listener for rate form
+    const rateForm = document.getElementById('rateForm');
+    if (rateForm) {
+      rateForm.addEventListener('submit', handleRateSubmit);
+    }
+    
+    // Add event listener for change password form
+    const changePasswordForm = document.getElementById('changePasswordForm');
+    if (changePasswordForm) {
+      changePasswordForm.addEventListener('submit', handleChangePassword);
+    }
+  });
+</script>
+
+</body>
+</html>
