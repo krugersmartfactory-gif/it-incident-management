@@ -476,12 +476,12 @@
       const { data: device, error } = await supabaseClient
         .from('devices')
         .select('*')
-        .eq('device_code', decodedText)
+        .eq('code', decodedText)
         .single();
       
       if (!error && device) {
         // Auto-fill device name if found
-        document.getElementById('deviceName').value = device.device_name || '';
+        document.getElementById('deviceName').value = device.name || '';
         document.getElementById('reportAlert').innerHTML = '<div class="alert alert-success">✅ Đã quét mã: ' + decodedText + '</div>';
       } else {
         document.getElementById('reportAlert').innerHTML = '<div class="alert alert-success">✅ Đã quét mã: ' + decodedText + '<br>Vui lòng nhập tên thiết bị.</div>';
@@ -585,9 +585,10 @@
       loadOpenIncidents();
     }
     
-    // Load users when switching to rate tab
+    // Load users and unrated incidents when switching to rate tab
     if (tabName === 'rate') {
       loadUsersForRating();
+      loadUnratedIncidentsForRating();  // ✅ Thêm function load danh sách sự cố chưa đánh giá
     }
     
     // Load locked accounts when switching to admin tab
@@ -693,20 +694,20 @@
       const devicePromise = supabaseClient
         .from('devices')
         .select('*')
-        .eq('device_code', deviceCode)
+        .eq('code', deviceCode)
         .maybeSingle();  // ✅ Dùng maybeSingle() thay vì single() để không throw error khi không tìm thấy
       
       const repairCountPromise = supabaseClient
         .from('incidents')
         .select('id', { count: 'exact' })
         .eq('device_code', deviceCode)
-        .eq('status', 'Đã xử lý');
+        .eq('status', 'Closed');  // ✅ Changed from 'Đã xử lý' to 'Closed' to match database schema
       
       const unratedPromise = supabaseClient
         .from('incidents')
         .select('*')
         .eq('device_code', deviceCode)
-        .eq('status', 'Đã xử lý')
+        .eq('status', 'Closed')  // ✅ Changed from 'Đã xử lý' to 'Closed' to match database schema
         .is('rating', null);
       
       // Chờ tất cả promises hoàn thành song song
@@ -716,13 +717,28 @@
         unratedPromise
       ]);
       
+      // Debug: Log results
+      console.log('Device Result:', deviceResult);
+      console.log('Repair Result:', repairResult);
+      console.log('Unrated Result:', unratedResult);
+      
       // ============================================
       // BƯỚC 3: CẬP NHẬT UI KHI CÓ DATA
       // ============================================
       
       // Update device info
-      if (deviceResult.error || !deviceResult.data) {
-        document.getElementById('infoCode').textContent = 'Lỗi: Không tìm thấy thiết bị';
+      if (deviceResult.error) {
+        console.error('Device Error:', deviceResult.error);
+        document.getElementById('infoCode').textContent = 'Lỗi: ' + (deviceResult.error.message || 'Không tìm thấy thiết bị');
+        document.getElementById('infoName').textContent = '—';
+        document.getElementById('infoDept').textContent = '—';
+        document.getElementById('infoPurchase').textContent = '—';
+        document.getElementById('infoAge').textContent = '—';
+        return;
+      }
+      
+      if (!deviceResult.data) {
+        document.getElementById('infoCode').textContent = 'Lỗi: Không tìm thấy thiết bị với mã ' + deviceCode;
         document.getElementById('infoName').textContent = '—';
         document.getElementById('infoDept').textContent = '—';
         document.getElementById('infoPurchase').textContent = '—';
@@ -733,7 +749,7 @@
       const device = deviceResult.data;
       
       // Update device info (đã có device code từ trước)
-      document.getElementById('infoName').textContent = device.device_name || '—';
+      document.getElementById('infoName').textContent = device.name || '—';
       document.getElementById('infoDept').textContent = device.department || '—';
       document.getElementById('infoPurchase').textContent = device.purchase_date || '—';
       
@@ -793,7 +809,7 @@
         .from('incidents')
         .select('*')
         .eq('device_code', deviceCode)
-        .eq('status', 'Đã xử lý')
+        .eq('status', 'Closed')  // ✅ Changed from 'Đã xử lý' to 'Closed' to match database schema
         .is('rating', null);
       
       if (error) throw error;
@@ -985,16 +1001,33 @@
       // Switch to main app and pre-fill device info
       showMainApp();
       
+      // Scroll to top so user sees pre-filled form
+      window.scrollTo(0, 0);
+      
       // Auto-fill device code and switch to report tab
       if (currentDeviceCode) {
+        // Fetch device info first
+        const { data: device, error: deviceError } = await supabaseClient
+          .from('devices')
+          .select('*')
+          .eq('code', currentDeviceCode)
+          .maybeSingle();
+        
+        if (!deviceError && device) {
+          // Fill both device code and device name
+          document.getElementById('deviceCode').value = device.code || currentDeviceCode;
+          document.getElementById('deviceName').value = device.name || '';
+          
+          // Show success message
+          document.getElementById('reportAlert').innerHTML = '<div class="alert alert-success">✅ Đã tải thông tin thiết bị: ' + device.code + ' - ' + device.name + '</div>';
+        } else {
+          // Only fill device code if device not found
+          document.getElementById('deviceCode').value = currentDeviceCode;
+          document.getElementById('reportAlert').innerHTML = '<div class="alert alert-success">✅ Đã tải mã thiết bị: ' + currentDeviceCode + '</div>';
+        }
+        
+        // Switch to report tab
         switchTab('report');
-        document.getElementById('deviceCode').value = currentDeviceCode;
-        
-        // Try to fetch device info
-        await loadDeviceInfoForReport(currentDeviceCode);
-        
-        // Show success message
-        document.getElementById('reportAlert').innerHTML = '<div class="alert alert-success">✅ Đã tải thông tin thiết bị: ' + currentDeviceCode + '</div>';
       }
     } catch (error) {
       const errorMsg = handleSupabaseError(error);
@@ -1002,17 +1035,16 @@
       document.getElementById('deviceLoginError').classList.remove('hidden');
     }
   }
-  
-  async function loadDeviceInfoForReport(deviceCode) {
+    async function loadDeviceInfoForReport(deviceCode) {
     try {
       const { data: device, error } = await supabaseClient
         .from('devices')
         .select('*')
-        .eq('device_code', deviceCode)
+        .eq('code', deviceCode)
         .single();
       
       if (!error && device) {
-        document.getElementById('deviceName').value = device.device_name || '';
+        document.getElementById('deviceName').value = device.name || '';
       }
     } catch (error) {
       console.error('Error loading device info:', error);
@@ -1442,6 +1474,65 @@
     } catch (error) {
       console.error('Error loading users:', error);
     }
+  }
+  
+  async function loadUnratedIncidentsForRating() {
+    try {
+      // Get all unrated incidents (resolved but not rated)
+      const { data: unratedIncidents, error } = await supabaseClient
+        .from('incidents')
+        .select('*')
+        .eq('status', 'Closed')  // ✅ Changed from 'Đã xử lý' to 'Closed' to match database schema
+        .is('rating', null)
+        .order('resolved_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      // Display list before the form
+      const rateForm = document.getElementById('rateForm');
+      let existingList = document.getElementById('unratedIncidentsList');
+      
+      if (!existingList) {
+        existingList = document.createElement('div');
+        existingList.id = 'unratedIncidentsList';
+        existingList.style.marginBottom = '24px';
+        rateForm.parentNode.insertBefore(existingList, rateForm);
+      }
+      
+      if (unratedIncidents && unratedIncidents.length > 0) {
+        let html = '<div style="background: #fff3e0; border-left: 4px solid #f57c00; padding: 16px; border-radius: 8px; margin-bottom: 20px;">';
+        html += '<h3 style="margin: 0 0 12px 0; color: #f57c00; font-size: 16px;">⚠️ Các sự cố chưa được đánh giá (' + unratedIncidents.length + '):</h3>';
+        html += '<div style="display: grid; gap: 8px;">';
+        
+        unratedIncidents.forEach(inc => {
+          html += '<div style="background: #fff; padding: 12px; border-radius: 6px; border: 1px solid #ffe0b2; cursor: pointer;" onclick="selectIncidentToRate(\'' + inc.incident_code + '\')">';
+          html += '<div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">';
+          html += '<div style="flex: 1;">';
+          html += '<strong style="color: #f57c00; font-size: 15px;">' + inc.incident_code + '</strong><br>';
+          html += '<span style="color: #666; font-size: 13px;">Thiết bị: ' + inc.device_code + '</span><br>';
+          html += '<span style="color: #666; font-size: 13px;">' + inc.description.substring(0, 60) + '...</span>';
+          html += '</div>';
+          html += '<button type="button" onclick="selectIncidentToRate(\'' + inc.incident_code + '\'); event.stopPropagation();" style="background: #1a73e8; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; white-space: nowrap;">Đánh giá</button>';
+          html += '</div>';
+          html += '</div>';
+        });
+        
+        html += '</div>';
+        html += '</div>';
+        
+        existingList.innerHTML = html;
+      } else {
+        existingList.innerHTML = '<div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 16px; border-radius: 8px; color: #2e7d32; margin-bottom: 20px;">✅ Tất cả sự cố đã được đánh giá!</div>';
+      }
+    } catch (error) {
+      console.error('Error loading unrated incidents:', error);
+    }
+  }
+  
+  function selectIncidentToRate(incidentCode) {
+    document.getElementById('rateIncidentCode').value = incidentCode;
+    document.getElementById('rateIncidentCode').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.getElementById('rateIncidentCode').focus();
   }
   
   function getStarLabel(star) {
