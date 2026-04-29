@@ -1479,6 +1479,8 @@
   
   async function loadUnratedIncidentsForRating() {
     try {
+      console.log('=== LOADING UNRATED INCIDENTS ===');
+      
       // Get all unrated incidents (resolved but not rated)
       const { data: unratedIncidents, error } = await supabaseClient
         .from('incidents')
@@ -1486,6 +1488,9 @@
         .eq('status', 'Closed')  // ✅ Changed from 'Đã xử lý' to 'Closed' to match database schema
         .is('rating', null)
         .order('resolve_date', { ascending: false });  // ✅ Bug 5 fix: Changed from 'resolved_at' to 'resolve_date'
+      
+      console.log('Query result:', { unratedIncidents, error });
+      console.log('Number of unrated incidents:', unratedIncidents ? unratedIncidents.length : 0);
       
       if (error) throw error;
       
