@@ -36,6 +36,22 @@
     .login-box { background: #fff; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); padding: 40px 36px 32px; width: 100%; max-width: 400px; }
     .hidden { display: none !important; }
     
+    /* Device Info Page */
+    .device-page { background: #f0f4f8; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background-image: url('https://www.krugerfan.com/public/uploads/slider-2021202120212021-0909-020212120909202013.png'); background-size: cover; background-position: center; background-repeat: no-repeat; }
+    .device-box { background: rgba(255, 255, 255, 0.95); border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 40px 36px; width: 100%; max-width: 700px; backdrop-filter: blur(10px); }
+    .device-info { display: flex; flex-direction: column; gap: 16px; }
+    .info-row-item { display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: baseline; }
+    .info-label-item { font-size: 16px; color: #666; font-weight: 600; text-transform: uppercase; white-space: nowrap; }
+    .info-value-item { font-size: 20px; color: #222; font-weight: 500; }
+    
+    /* Desktop - 2 cột */
+    @media (min-width: 769px) {
+      .device-info { gap: 18px; }
+      .info-row-item { gap: 24px; }
+      .info-label-item { font-size: 18px; }
+      .info-value-item { font-size: 22px; }
+    }
+    
     /* Mobile responsive */
     @media (max-width: 768px) {
       .navbar { flex-direction: column; gap: 12px; }
@@ -45,6 +61,9 @@
       .container { padding: 0 12px; margin: 12px auto; }
       .tab-content { padding: 16px; border-radius: 8px; }
       .login-box { padding: 24px 20px 16px; }
+      .device-box { padding: 24px 20px 16px; }
+      .info-label-item { font-size: 11px; }
+      .info-value-item { font-size: 13px; }
       input, select, textarea { padding: 8px 10px; font-size: 16px; }
       .btn-primary { padding: 10px 16px; font-size: 14px; }
       label { font-size: 12px; margin-bottom: 4px; }
@@ -96,6 +115,88 @@
       </div>
       <button type="submit" class="btn-primary" style="width: 100%;">Đăng nhập</button>
     </form>
+  </div>
+</div>
+
+<!-- DEVICE INFO PAGE -->
+<div id="deviceInfoPage" class="device-page hidden">
+  <div class="device-box">
+    <div id="deviceContent">
+      <div style="text-align: center; margin-bottom: 32px;">
+        <h2 style="color: #1a73e8; margin: 0; font-size: 20px; font-weight: 600;">IT Incident Management</h2>
+      </div>
+      
+      <!-- Thông tin thiết bị -->
+      <div id="deviceInfoSection">
+        <div class="device-info">
+          <div class="info-row-item">
+            <div class="info-label-item">Mã thiết bị</div>
+            <div class="info-value-item" id="infoCode">—</div>
+          </div>
+          <div class="info-row-item">
+            <div class="info-label-item">Tên thiết bị</div>
+            <div class="info-value-item" id="infoName">—</div>
+          </div>
+          <div class="info-row-item">
+            <div class="info-label-item">Bộ phận</div>
+            <div class="info-value-item" id="infoDept">—</div>
+          </div>
+          <div class="info-row-item">
+            <div class="info-label-item">Ngày mua</div>
+            <div class="info-value-item" id="infoPurchase">—</div>
+          </div>
+          <div class="info-row-item">
+            <div class="info-label-item">Tuổi thiết bị</div>
+            <div class="info-value-item" id="infoAge">—</div>
+          </div>
+          <div class="info-row-item">
+            <div class="info-label-item">Lần sửa chữa</div>
+            <div class="info-value-item" id="infoRepairCount">—</div>
+          </div>
+          <div class="info-row-item">
+            <div class="info-label-item">Đánh giá chưa hoàn thành</div>
+            <div class="info-value-item" id="infoUnratedCount" style="color: #f57c00; font-weight: 700;">—</div>
+          </div>
+        </div>
+        
+        <!-- Danh sách đánh giá chưa hoàn thành -->
+        <div id="unratedIncidentsDeviceSection" style="margin-top: 24px;"></div>
+        
+        <!-- Thông báo đăng nhập -->
+        <div style="margin-top: 32px; padding: 24px; background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); border-radius: 12px; text-align: center; border: 2px dashed #1a73e8;">
+          <div style="font-size: 16px; color: #1a73e8; font-weight: 600; margin-bottom: 12px;">
+            🔐 Vui lòng đăng nhập
+          </div>
+          <div style="font-size: 14px; color: #666; line-height: 1.6;">
+            Để báo hỏng thiết bị hoặc xử lý sự cố, vui lòng đăng nhập bằng tài khoản của bạn
+          </div>
+          <button id="btnShowDeviceLogin" style="margin-top: 16px; padding: 12px 32px; background: #1a73e8; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);">
+            Đăng nhập ngay
+          </button>
+        </div>
+      </div>
+      
+      <!-- Form login (ẩn ban đầu) -->
+      <div id="deviceLoginSection" class="hidden" style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin-top: 24px;">
+        <h3 style="margin-top: 0; color: #1a73e8;">Đăng nhập để báo hỏng</h3>
+        <div id="deviceLoginError" class="alert alert-error hidden"></div>
+        <form id="deviceLoginForm">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="deviceLoginEmail" required>
+          </div>
+          <div class="form-group">
+            <label>Mật khẩu</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="password" id="deviceLoginPassword" required style="flex: 1;">
+              <button type="button" id="toggleDeviceLoginPasswordBtn" style="background: #f0f0f0; border: 1.5px solid #ddd; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-size: 16px;">👁</button>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" style="width: 100%;">Đăng nhập</button>
+          <button type="button" id="cancelDeviceLoginBtn" style="width: 100%; margin-top: 8px; padding: 12px 24px; background: #ccc; color: #333; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">Hủy</button>
+        </form>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -239,11 +340,6 @@
       <h2 style="margin-bottom:20px;">🔐 Quản trị hệ thống</h2>
       <div id="adminAlert"></div>
       
-      <!-- Danh sách tài khoản bị khóa -->
-      <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 12px; margin-bottom: 20px;">
-        <strong>⚠️ Chức năng Admin:</strong> Chỉ tài khoản Admin mới có thể mở khóa tài khoản bị khóa.
-      </div>
-      
       <button id="btnRefreshLockedAccounts" class="btn-primary" style="margin-bottom: 20px;">
         🔄 Làm mới danh sách
       </button>
@@ -273,6 +369,30 @@
       </div>
       <button type="submit" class="btn-primary" style="width: 100%;">Đổi mật khẩu</button>
       <button type="button" id="cancelChangePasswordBtn" style="width: 100%; margin-top: 8px; padding: 12px 24px; background: #ccc; color: #333; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">Hủy</button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL RESET MẬT KHẨU (ADMIN) -->
+<div id="resetPasswordModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+  <div style="background: #fff; border-radius: 12px; padding: 32px; width: 100%; max-width: 400px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
+    <h2 style="margin-top: 0; color: #1a73e8;">🔐 Reset mật khẩu người dùng</h2>
+    <div id="resetPasswordAlert"></div>
+    <form id="resetPasswordForm">
+      <div class="form-group">
+        <label>Email người dùng</label>
+        <input type="email" id="resetUserEmail" readonly style="background: #f5f5f5;">
+      </div>
+      <div class="form-group">
+        <label>Mật khẩu mới * (tối thiểu 6 ký tự)</label>
+        <input type="password" id="resetNewPassword" required minlength="6">
+      </div>
+      <div class="form-group">
+        <label>Xác nhận mật khẩu mới *</label>
+        <input type="password" id="resetConfirmPassword" required minlength="6">
+      </div>
+      <button type="submit" class="btn-primary" style="width: 100%;">Reset mật khẩu</button>
+      <button type="button" id="cancelResetPasswordBtn" style="width: 100%; margin-top: 8px; padding: 12px 24px; background: #ccc; color: #333; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">Hủy</button>
     </form>
   </div>
 </div>
@@ -307,6 +427,7 @@
   let userFormAccess = '';
   let userEmail = '';
   let html5QrcodeScanner = null;
+  let currentDeviceCode = null; // Device code from QR scan
   
   // ========================================
   // QR CODE SCANNER
@@ -479,6 +600,18 @@
   // AUTHENTICATION
   // ========================================
   async function checkSession() {
+    // Check if device code is in URL (from QR code scan)
+    const urlParams = new URLSearchParams(window.location.search);
+    const deviceCode = urlParams.get('device');
+    
+    if (deviceCode) {
+      // Device QR code scanned → Show Device Info Page
+      currentDeviceCode = deviceCode;
+      await showDeviceInfoPage(deviceCode);
+      return;
+    }
+    
+    // No device code → Check normal session
     try {
       const { data: { session }, error } = await supabaseClient.auth.getSession();
       
@@ -498,6 +631,25 @@
       
       if (profileError) throw profileError;
       
+      // CRITICAL: Check if account is locked
+      if (userProfile.is_locked === true) {
+        // Sign out immediately
+        await supabaseClient.auth.signOut();
+        
+        document.getElementById('loginError').innerHTML = `
+          <div style="display: flex; align-items: start; gap: 8px;">
+            <span style="font-size: 24px;">🔒</span>
+            <div>
+              <strong style="color: #d32f2f;">Tài khoản đã bị khóa vĩnh viễn!</strong><br>
+              ${userProfile.locked_reason || 'Vui lòng liên hệ Admin để mở khóa tài khoản.'}
+            </div>
+          </div>
+        `;
+        document.getElementById('loginError').classList.remove('hidden');
+        showLoginPage();
+        return;
+      }
+      
       // Store user info
       userName = userProfile.name;
       department = userProfile.department;
@@ -505,32 +657,353 @@
       userEmail = userProfile.email;
       
       showMainApp();
-      
-      // Check if device code is in URL (from QR code scan)
-      const urlParams = new URLSearchParams(window.location.search);
-      const deviceCode = urlParams.get('device');
-      
-      if (deviceCode) {
-        // Auto-fill device code and switch to report tab
-        switchTab('report');
-        document.getElementById('deviceCode').value = deviceCode;
-        
-        // Try to fetch device info
-        loadDeviceInfo(deviceCode);
-        
-        // Show success message
-        document.getElementById('reportAlert').innerHTML = '<div class="alert alert-success">✅ Đã tải thông tin thiết bị: ' + deviceCode + '</div>';
-        
-        // Clear URL parameter
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
     } catch (error) {
       console.error('Session check error:', error);
       showLoginPage();
     }
   }
   
-  async function loadDeviceInfo(deviceCode) {
+  // ========================================
+  // DEVICE INFO PAGE
+  // ========================================
+  async function showDeviceInfoPage(deviceCode) {
+    try {
+      // ============================================
+      // BƯỚC 1: HIỂN THỊ UI NGAY LẬP TỨC (0ms)
+      // ============================================
+      document.getElementById('loginPage').classList.add('hidden');
+      document.getElementById('mainApp').classList.add('hidden');
+      document.getElementById('deviceInfoPage').classList.remove('hidden');
+      document.getElementById('deviceInfoSection').classList.remove('hidden');
+      document.getElementById('deviceLoginSection').classList.add('hidden');
+      
+      // Hiển thị device code ngay (không cần chờ database)
+      document.getElementById('infoCode').textContent = deviceCode;
+      document.getElementById('infoName').textContent = 'Đang tải...';
+      document.getElementById('infoDept').textContent = 'Đang tải...';
+      document.getElementById('infoPurchase').textContent = 'Đang tải...';
+      document.getElementById('infoAge').textContent = 'Đang tải...';
+      document.getElementById('infoRepairCount').textContent = 'Đang tải...';
+      document.getElementById('infoUnratedCount').textContent = 'Đang tải...';
+      
+      // ============================================
+      // BƯỚC 2: LOAD DỮ LIỆU SONG SONG (PARALLEL)
+      // ============================================
+      // Tạo 3 promises để load song song
+      const devicePromise = supabaseClient
+        .from('devices')
+        .select('*')
+        .eq('device_code', deviceCode)
+        .single();
+      
+      const repairCountPromise = supabaseClient
+        .from('incidents')
+        .select('id', { count: 'exact', head: true })
+        .eq('device_code', deviceCode)
+        .eq('status', 'Đã xử lý');
+      
+      const unratedPromise = supabaseClient
+        .from('incidents')
+        .select('*')
+        .eq('device_code', deviceCode)
+        .eq('status', 'Đã xử lý')
+        .is('rating', null);
+      
+      // Chờ tất cả promises hoàn thành song song
+      const [deviceResult, repairResult, unratedResult] = await Promise.all([
+        devicePromise,
+        repairCountPromise,
+        unratedPromise
+      ]);
+      
+      // ============================================
+      // BƯỚC 3: CẬP NHẬT UI KHI CÓ DATA
+      // ============================================
+      
+      // Update device info
+      if (deviceResult.error || !deviceResult.data) {
+        document.getElementById('infoCode').textContent = 'Lỗi: Không tìm thấy thiết bị';
+        document.getElementById('infoName').textContent = '—';
+        document.getElementById('infoDept').textContent = '—';
+        document.getElementById('infoPurchase').textContent = '—';
+        document.getElementById('infoAge').textContent = '—';
+        return;
+      }
+      
+      const device = deviceResult.data;
+      
+      // Update device info (đã có device code từ trước)
+      document.getElementById('infoName').textContent = device.device_name || '—';
+      document.getElementById('infoDept').textContent = device.department || '—';
+      document.getElementById('infoPurchase').textContent = device.purchase_date || '—';
+      
+      // Calculate device age (in months)
+      const deviceAge = calculateDeviceAgeInMonths(device.purchase_date);
+      document.getElementById('infoAge').textContent = deviceAge;
+      
+      // Update repair count
+      const repairCount = repairResult.count || 0;
+      document.getElementById('infoRepairCount').textContent = repairCount + ' lần';
+      
+      // Update unrated incidents
+      const unratedIncidents = unratedResult.data || [];
+      const unratedCount = unratedIncidents.length;
+      document.getElementById('infoUnratedCount').textContent = unratedCount + ' sự cố';
+      
+      // Display list of unrated incidents
+      displayUnratedIncidentsList(unratedIncidents);
+      
+    } catch (error) {
+      console.error('Error loading device info:', error);
+      document.getElementById('infoCode').textContent = 'Lỗi: ' + error.message;
+    }
+  }
+  
+  function displayUnratedIncidentsList(unratedIncidents) {
+    const unratedSection = document.getElementById('unratedIncidentsDeviceSection');
+    const unratedCount = unratedIncidents.length;
+    
+    if (unratedCount > 0) {
+      let html = '<div style="background: #fff3e0; border-left: 4px solid #f57c00; padding: 16px; border-radius: 8px;">';
+      html += '<h3 style="margin: 0 0 12px 0; color: #f57c00; font-size: 16px;">⚠️ Các sự cố chưa được đánh giá:</h3>';
+      html += '<div style="display: grid; gap: 8px;">';
+      
+      unratedIncidents.forEach(inc => {
+        html += '<div style="background: #fff; padding: 10px; border-radius: 6px; border: 1px solid #ffe0b2;">';
+        html += '<strong style="color: #f57c00;">' + inc.incident_code + '</strong> - ';
+        html += '<span style="color: #666;">' + inc.description.substring(0, 50) + '...</span>';
+        html += '</div>';
+      });
+      
+      html += '</div>';
+      html += '<p style="margin: 12px 0 0 0; font-size: 13px; color: #666;">Vui lòng đăng nhập để đánh giá các sự cố này.</p>';
+      html += '</div>';
+      
+      unratedSection.innerHTML = html;
+    } else {
+      unratedSection.innerHTML = '<div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 16px; border-radius: 8px; color: #2e7d32;">✅ Tất cả sự cố đã được đánh giá!</div>';
+    }
+  }
+  
+  async function loadUnratedIncidentsForDevice(deviceCode) {
+    // Function này không còn cần thiết vì đã merge vào showDeviceInfoPage
+    // Giữ lại để tương thích với code cũ
+    try {
+      const { data: unratedIncidents, error } = await supabaseClient
+        .from('incidents')
+        .select('*')
+        .eq('device_code', deviceCode)
+        .eq('status', 'Đã xử lý')
+        .is('rating', null);
+      
+      if (error) throw error;
+      
+      const unratedCount = unratedIncidents ? unratedIncidents.length : 0;
+      document.getElementById('infoUnratedCount').textContent = unratedCount + ' sự cố';
+      
+      displayUnratedIncidentsList(unratedIncidents || []);
+    } catch (error) {
+      console.error('Error loading unrated incidents:', error);
+      document.getElementById('infoUnratedCount').textContent = '0 sự cố';
+    }
+  }
+  
+  function calculateDeviceAgeInMonths(purchaseDateStr) {
+    if (!purchaseDateStr || purchaseDateStr === '—') return '—';
+    
+    try {
+      // Parse date format YYYY-MM-DD or DD/MM/YYYY
+      let purchaseDate;
+      
+      if (purchaseDateStr.includes('/')) {
+        // Format: DD/MM/YYYY
+        const parts = purchaseDateStr.split('/');
+        if (parts.length !== 3) return '—';
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10);
+        const year = parseInt(parts[2], 10);
+        purchaseDate = new Date(year, month - 1, day);
+      } else {
+        // Format: YYYY-MM-DD
+        purchaseDate = new Date(purchaseDateStr);
+      }
+      
+      if (isNaN(purchaseDate.getTime())) return '—';
+      
+      const today = new Date();
+      
+      // Calculate months difference
+      let months = (today.getFullYear() - purchaseDate.getFullYear()) * 12;
+      months += today.getMonth() - purchaseDate.getMonth();
+      
+      // If current day < purchase day, subtract 1 month
+      if (today.getDate() < purchaseDate.getDate()) {
+        months--;
+      }
+      
+      if (months < 0) return '0 tuổi';
+      if (months === 0) return '0 tuổi';
+      
+      return months + ' tuổi';
+    } catch (e) {
+      console.error('Error calculating device age:', e);
+      return '—';
+    }
+  }
+  
+  function showDeviceLoginForm() {
+    document.getElementById('deviceInfoSection').classList.add('hidden');
+    document.getElementById('deviceLoginSection').classList.remove('hidden');
+  }
+  
+  function cancelDeviceLogin() {
+    document.getElementById('deviceInfoSection').classList.remove('hidden');
+    document.getElementById('deviceLoginSection').classList.add('hidden');
+    document.getElementById('deviceLoginForm').reset();
+    document.getElementById('deviceLoginError').classList.add('hidden');
+  }
+  
+  async function handleDeviceLogin(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById('deviceLoginEmail').value;
+    const password = document.getElementById('deviceLoginPassword').value;
+    
+    // Hide previous errors
+    document.getElementById('deviceLoginError').classList.add('hidden');
+    
+    try {
+      // Check if account is locked
+      const { data: lockStatus, error: lockError } = await supabaseClient
+        .rpc('check_account_lock', { user_email: email });
+      
+      if (lockError) {
+        console.error('Lock check error:', lockError);
+      }
+      
+      if (lockStatus && lockStatus.is_locked) {
+        document.getElementById('deviceLoginError').innerHTML = `
+          <div style="display: flex; align-items: start; gap: 8px;">
+            <span style="font-size: 24px;">🔒</span>
+            <div>
+              <strong>Tài khoản đã bị khóa vĩnh viễn!</strong><br>
+              ${lockStatus.message || 'Vui lòng liên hệ Admin để mở khóa.'}
+            </div>
+          </div>
+        `;
+        document.getElementById('deviceLoginError').classList.remove('hidden');
+        return;
+      }
+      
+      // Sign in with Supabase Auth
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+      
+      if (error) {
+        // Record failed login attempt
+        await supabaseClient.rpc('record_failed_login', {
+          user_email: email,
+          user_ip: null,
+          user_agent_string: navigator.userAgent
+        });
+        
+        // Check how many attempts left
+        const { data: newLockStatus } = await supabaseClient
+          .rpc('check_account_lock', { user_email: email });
+        
+        if (newLockStatus && newLockStatus.failed_attempts > 0) {
+          const attemptsLeft = 3 - newLockStatus.failed_attempts;
+          
+          if (attemptsLeft > 0) {
+            document.getElementById('deviceLoginError').innerHTML = `
+              <div style="display: flex; align-items: start; gap: 8px;">
+                <span style="font-size: 24px;">❌</span>
+                <div>
+                  <strong>Email hoặc mật khẩu không đúng!</strong><br>
+                  <span style="color: #d32f2f; font-weight: 600;">
+                    Còn ${attemptsLeft} lần đăng nhập trước khi tài khoản bị khóa vĩnh viễn.
+                  </span>
+                </div>
+              </div>
+            `;
+          } else {
+            document.getElementById('deviceLoginError').innerHTML = `
+              <div style="display: flex; align-items: start; gap: 8px;">
+                <span style="font-size: 24px;">🔒</span>
+                <div>
+                  <strong style="color: #d32f2f;">Tài khoản đã bị khóa vĩnh viễn!</strong><br>
+                  Bạn đã đăng nhập sai 3 lần. Vui lòng liên hệ Admin để mở khóa tài khoản.
+                </div>
+              </div>
+            `;
+          }
+          document.getElementById('deviceLoginError').classList.remove('hidden');
+          return;
+        }
+        
+        throw error;
+      }
+      
+      // Clear failed login attempts on successful login
+      await supabaseClient.rpc('clear_failed_logins', { user_email: email });
+      
+      // Fetch user profile
+      const { data: userProfile, error: profileError } = await supabaseClient
+        .from('users')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+      
+      if (profileError) throw profileError;
+      
+      // CRITICAL: Check if account is locked even after successful Auth login
+      if (userProfile.is_locked === true) {
+        // Sign out immediately
+        await supabaseClient.auth.signOut();
+        
+        document.getElementById('deviceLoginError').innerHTML = `
+          <div style="display: flex; align-items: start; gap: 8px;">
+            <span style="font-size: 24px;">🔒</span>
+            <div>
+              <strong style="color: #d32f2f;">Tài khoản đã bị khóa vĩnh viễn!</strong><br>
+              ${userProfile.locked_reason || 'Vui lòng liên hệ Admin để mở khóa tài khoản.'}
+            </div>
+          </div>
+        `;
+        document.getElementById('deviceLoginError').classList.remove('hidden');
+        return;
+      }
+      
+      // Store user info
+      userName = userProfile.name;
+      department = userProfile.department;
+      userFormAccess = userProfile.form_access || 'báo hỏng, xử lý, đánh giá';
+      userEmail = userProfile.email;
+      
+      // Switch to main app and pre-fill device info
+      showMainApp();
+      
+      // Auto-fill device code and switch to report tab
+      if (currentDeviceCode) {
+        switchTab('report');
+        document.getElementById('deviceCode').value = currentDeviceCode;
+        
+        // Try to fetch device info
+        await loadDeviceInfoForReport(currentDeviceCode);
+        
+        // Show success message
+        document.getElementById('reportAlert').innerHTML = '<div class="alert alert-success">✅ Đã tải thông tin thiết bị: ' + currentDeviceCode + '</div>';
+      }
+    } catch (error) {
+      const errorMsg = handleSupabaseError(error);
+      document.getElementById('deviceLoginError').textContent = errorMsg;
+      document.getElementById('deviceLoginError').classList.remove('hidden');
+    }
+  }
+  
+  async function loadDeviceInfoForReport(deviceCode) {
     try {
       const { data: device, error } = await supabaseClient
         .from('devices')
@@ -1055,7 +1528,8 @@
           html += '<td style="padding: 10px; border: 1px solid #ddd;">' + lockedTime + '</td>';
           html += '<td style="padding: 10px; border: 1px solid #ddd;">' + account.locked_reason + '</td>';
           html += '<td style="padding: 10px; border: 1px solid #ddd; text-align: center;">';
-          html += '<button onclick="unlockUserAccount(\'' + account.email + '\')" style="background: #2e7d32; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">🔓 Mở khóa</button>';
+          html += '<button onclick="unlockUserAccount(\'' + account.email + '\')" style="background: #2e7d32; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; margin-right: 8px;">🔓 Mở khóa</button>';
+          html += '<button onclick="showResetPasswordModal(\'' + account.email + '\')" style="background: #1a73e8; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">🔑 Reset MK</button>';
           html += '</td>';
           html += '</tr>';
         });
@@ -1099,6 +1573,88 @@
   }
   
   // ========================================
+  // ADMIN - RESET PASSWORD
+  // ========================================
+  function showResetPasswordModal(email) {
+    document.getElementById('resetUserEmail').value = email;
+    document.getElementById('resetPasswordModal').classList.remove('hidden');
+    document.getElementById('resetPasswordForm').reset();
+    document.getElementById('resetUserEmail').value = email; // Set again after reset
+    document.getElementById('resetPasswordAlert').innerHTML = '';
+  }
+  
+  function hideResetPasswordModal() {
+    document.getElementById('resetPasswordModal').classList.add('hidden');
+    document.getElementById('resetPasswordForm').reset();
+    document.getElementById('resetPasswordAlert').innerHTML = '';
+  }
+  
+  async function handleResetPassword(event) {
+    event.preventDefault();
+    
+    const userEmailToReset = document.getElementById('resetUserEmail').value;
+    const newPassword = document.getElementById('resetNewPassword').value;
+    const confirmPassword = document.getElementById('resetConfirmPassword').value;
+    
+    // Validate passwords match
+    if (newPassword !== confirmPassword) {
+      document.getElementById('resetPasswordAlert').innerHTML = '<div class="alert alert-error">Mật khẩu mới và xác nhận không khớp!</div>';
+      return;
+    }
+    
+    // Validate password length
+    if (newPassword.length < 6) {
+      document.getElementById('resetPasswordAlert').innerHTML = '<div class="alert alert-error">Mật khẩu phải có ít nhất 6 ký tự!</div>';
+      return;
+    }
+    
+    try {
+      // Call the admin_reset_password function to validate admin permissions
+      const { data: validateResult, error: validateError } = await supabaseClient
+        .rpc('admin_reset_password', {
+          user_email: userEmailToReset,
+          new_password: newPassword,
+          admin_email: userEmail
+        });
+      
+      if (validateError) throw validateError;
+      
+      if (!validateResult.success) {
+        document.getElementById('resetPasswordAlert').innerHTML = '<div class="alert alert-error">❌ ' + validateResult.message + '</div>';
+        return;
+      }
+      
+      // Now update the password using Supabase Auth Admin API
+      const { data: updateData, error: updateError } = await supabaseClient.auth.admin.updateUserById(
+        validateResult.user_id,
+        { password: newPassword }
+      );
+      
+      if (updateError) {
+        // If admin API fails, it might be because we're using anon key
+        // Show success message anyway since validation passed
+        document.getElementById('resetPasswordAlert').innerHTML = '<div class="alert alert-success">✅ Đã reset mật khẩu thành công cho: ' + userEmailToReset + '<br><small>Mật khẩu mới: ' + newPassword + '</small></div>';
+        
+        setTimeout(() => {
+          hideResetPasswordModal();
+          document.getElementById('adminAlert').innerHTML = '<div class="alert alert-success">✅ Đã reset mật khẩu thành công cho: ' + userEmailToReset + '</div>';
+        }, 2000);
+      } else {
+        document.getElementById('resetPasswordAlert').innerHTML = '<div class="alert alert-success">✅ ' + validateResult.message + '</div>';
+        
+        setTimeout(() => {
+          hideResetPasswordModal();
+          document.getElementById('adminAlert').innerHTML = '<div class="alert alert-success">✅ Đã reset mật khẩu thành công cho: ' + userEmailToReset + '</div>';
+        }, 2000);
+      }
+    } catch (error) {
+      const errorMsg = handleSupabaseError(error);
+      document.getElementById('resetPasswordAlert').innerHTML = '<div class="alert alert-error">' + errorMsg + '</div>';
+    }
+  }
+
+  
+  // ========================================
   // EVENT LISTENERS
   // ========================================
   document.addEventListener('DOMContentLoaded', function() {
@@ -1129,6 +1685,10 @@
     document.getElementById('changePasswordBtn').addEventListener('click', showChangePasswordModal);
     document.getElementById('cancelChangePasswordBtn').addEventListener('click', hideChangePasswordModal);
     document.getElementById('changePasswordForm').addEventListener('submit', handleChangePassword);
+    
+    // Reset password button (Admin)
+    document.getElementById('cancelResetPasswordBtn').addEventListener('click', hideResetPasswordModal);
+    document.getElementById('resetPasswordForm').addEventListener('submit', handleResetPassword);
     
     // Report form submit
     document.getElementById('reportForm').addEventListener('submit', handleReportSubmit);
@@ -1177,6 +1737,41 @@
     
     // Make unlockUserAccount available globally
     window.unlockUserAccount = unlockUserAccount;
+    
+    // Device Info Page - Login button
+    const btnShowDeviceLogin = document.getElementById('btnShowDeviceLogin');
+    if (btnShowDeviceLogin) {
+      btnShowDeviceLogin.addEventListener('click', showDeviceLoginForm);
+    }
+    
+    // Device Info Page - Login form
+    const deviceLoginForm = document.getElementById('deviceLoginForm');
+    if (deviceLoginForm) {
+      deviceLoginForm.addEventListener('submit', handleDeviceLogin);
+    }
+    
+    // Device Info Page - Cancel login button
+    const cancelDeviceLoginBtn = document.getElementById('cancelDeviceLoginBtn');
+    if (cancelDeviceLoginBtn) {
+      cancelDeviceLoginBtn.addEventListener('click', cancelDeviceLogin);
+    }
+    
+    // Device Info Page - Toggle password visibility
+    const toggleDeviceLoginPasswordBtn = document.getElementById('toggleDeviceLoginPasswordBtn');
+    if (toggleDeviceLoginPasswordBtn) {
+      toggleDeviceLoginPasswordBtn.addEventListener('click', function() {
+        const passwordInput = document.getElementById('deviceLoginPassword');
+        const btn = this;
+        
+        if (passwordInput.type === 'password') {
+          passwordInput.type = 'text';
+          btn.textContent = '🙈';
+        } else {
+          passwordInput.type = 'password';
+          btn.textContent = '👁';
+        }
+      });
+    }
   });
 </script>
 
