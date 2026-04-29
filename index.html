@@ -1582,6 +1582,9 @@
       
       // Hide form after success
       hideRateForm();
+      
+      // Reload the unrated incidents list to remove the rated incident
+      loadUnratedIncidentsForRating();
     } catch (error) {
       const errorMsg = handleSupabaseError(error);
       document.getElementById('rateAlert').innerHTML = '<div class="alert alert-error">' + errorMsg + '</div>';
