@@ -723,6 +723,12 @@
       console.log('Repair Result:', repairResult);
       console.log('Unrated Result:', unratedResult);
       
+      // Mobile debug: Show alert if device not found
+      if (deviceResult.error || !deviceResult.data) {
+        const errorMsg = deviceResult.error ? deviceResult.error.message : 'Device data is null';
+        alert('DEBUG - Device Query Failed:\n' + errorMsg + '\n\nDevice Code: ' + deviceCode);
+      }
+      
       // ============================================
       // BƯỚC 3: CẬP NHẬT UI KHI CÓ DATA
       // ============================================
