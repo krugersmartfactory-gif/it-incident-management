@@ -1555,13 +1555,19 @@
     const raterName = document.getElementById('raterName').value;
     const attitudeComment = document.getElementById('attitudeComment').value;
     
+    console.log('=== SUBMIT RATING DEBUG ===');
+    console.log('Incident Code:', incidentCode);
+    console.log('Rating:', rating);
+    console.log('Rater Name:', raterName);
+    console.log('Attitude Comment:', attitudeComment);
+    
     if (!rating) {
       document.getElementById('rateAlert').innerHTML = '<div class="alert alert-error">Vui lòng chọn số sao!</div>';
       return;
     }
     
     try {
-      const { error } = await supabaseClient
+      const { data, error } = await supabaseClient
         .from('incidents')
         .update({
           rating: parseInt(rating),
@@ -1570,9 +1576,21 @@
         })
         .eq('incident_code', incidentCode)
         .eq('status', 'Closed')
-        .is('rating', null); // Prevent double-rating
+        .is('rating', null) // Prevent double-rating
+        .select(); // ← THÊM .select() để lấy data về
+      
+      console.log('Update result:', { data, error });
       
       if (error) throw error;
+      
+      // Check if any rows were updated
+      if (!data || data.length === 0) {
+        console.warn('⚠️ No rows were updated! Incident may already be rated or not found.');
+        document.getElementById('rateAlert').innerHTML = '<div class="alert alert-error">⚠️ Không thể cập nhật đánh giá. Sự cố có thể đã được đánh giá hoặc không tồn tại.</div>';
+        return;
+      }
+      
+      console.log('✅ Rating saved successfully:', data);
       
       document.getElementById('rateAlert').innerHTML = '<div class="alert alert-success">✅ Đánh giá thành công!</div>';
       document.getElementById('rateForm').reset();
@@ -1586,6 +1604,7 @@
       // Reload the unrated incidents list to remove the rated incident
       loadUnratedIncidentsForRating();
     } catch (error) {
+      console.error('❌ Rating submission error:', error);
       const errorMsg = handleSupabaseError(error);
       document.getElementById('rateAlert').innerHTML = '<div class="alert alert-error">' + errorMsg + '</div>';
     }
