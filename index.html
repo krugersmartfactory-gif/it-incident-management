@@ -527,6 +527,7 @@
   
   function showMainApp() {
     document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('deviceInfoPage').classList.add('hidden');  // ✅ Bug 4 fix: Hide Device Info Page when switching to Main App
     document.getElementById('mainApp').classList.remove('hidden');
     document.getElementById('userNameDisplay').textContent = userName;
     
@@ -1484,7 +1485,7 @@
         .select('*')
         .eq('status', 'Closed')  // ✅ Changed from 'Đã xử lý' to 'Closed' to match database schema
         .is('rating', null)
-        .order('resolved_at', { ascending: false });
+        .order('resolve_date', { ascending: false });  // ✅ Bug 5 fix: Changed from 'resolved_at' to 'resolve_date'
       
       if (error) throw error;
       
