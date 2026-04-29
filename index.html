@@ -698,7 +698,7 @@
       
       const repairCountPromise = supabaseClient
         .from('incidents')
-        .select('id', { count: 'exact', head: true })
+        .select('id', { count: 'exact' })
         .eq('device_code', deviceCode)
         .eq('status', 'Đã xử lý');
       
