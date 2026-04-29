@@ -723,6 +723,12 @@
       console.log('Repair Result:', repairResult);
       console.log('Unrated Result:', unratedResult);
       
+      // Mobile debug: Show alert if device not found
+      if (deviceResult.error || !deviceResult.data) {
+        const errorMsg = deviceResult.error ? deviceResult.error.message : 'Device data is null';
+        alert('DEBUG - Device Query Failed:\n' + errorMsg + '\n\nDevice Code: ' + deviceCode);
+      }
+      
       // ============================================
       // BƯỚC 3: CẬP NHẬT UI KHI CÓ DATA
       // ============================================
@@ -1479,6 +1485,8 @@
   
   async function loadUnratedIncidentsForRating() {
     try {
+      console.log('=== LOADING UNRATED INCIDENTS ===');
+      
       // Get all unrated incidents (resolved but not rated)
       const { data: unratedIncidents, error } = await supabaseClient
         .from('incidents')
@@ -1486,6 +1494,9 @@
         .eq('status', 'Closed')  // ✅ Changed from 'Đã xử lý' to 'Closed' to match database schema
         .is('rating', null)
         .order('resolve_date', { ascending: false });  // ✅ Bug 5 fix: Changed from 'resolved_at' to 'resolve_date'
+      
+      console.log('Query result:', { unratedIncidents, error });
+      console.log('Number of unrated incidents:', unratedIncidents ? unratedIncidents.length : 0);
       
       if (error) throw error;
       
@@ -1555,13 +1566,19 @@
     const raterName = document.getElementById('raterName').value;
     const attitudeComment = document.getElementById('attitudeComment').value;
     
+    console.log('=== SUBMIT RATING DEBUG ===');
+    console.log('Incident Code:', incidentCode);
+    console.log('Rating:', rating);
+    console.log('Rater Name:', raterName);
+    console.log('Attitude Comment:', attitudeComment);
+    
     if (!rating) {
       document.getElementById('rateAlert').innerHTML = '<div class="alert alert-error">Vui lòng chọn số sao!</div>';
       return;
     }
     
     try {
-      const { error } = await supabaseClient
+      const { data, error } = await supabaseClient
         .from('incidents')
         .update({
           rating: parseInt(rating),
@@ -1570,9 +1587,21 @@
         })
         .eq('incident_code', incidentCode)
         .eq('status', 'Closed')
-        .is('rating', null); // Prevent double-rating
+        .is('rating', null) // Prevent double-rating
+        .select(); // ← THÊM .select() để lấy data về
+      
+      console.log('Update result:', { data, error });
       
       if (error) throw error;
+      
+      // Check if any rows were updated
+      if (!data || data.length === 0) {
+        console.warn('⚠️ No rows were updated! Incident may already be rated or not found.');
+        document.getElementById('rateAlert').innerHTML = '<div class="alert alert-error">⚠️ Không thể cập nhật đánh giá. Sự cố có thể đã được đánh giá hoặc không tồn tại.</div>';
+        return;
+      }
+      
+      console.log('✅ Rating saved successfully:', data);
       
       document.getElementById('rateAlert').innerHTML = '<div class="alert alert-success">✅ Đánh giá thành công!</div>';
       document.getElementById('rateForm').reset();
@@ -1586,6 +1615,7 @@
       // Reload the unrated incidents list to remove the rated incident
       loadUnratedIncidentsForRating();
     } catch (error) {
+      console.error('❌ Rating submission error:', error);
       const errorMsg = handleSupabaseError(error);
       document.getElementById('rateAlert').innerHTML = '<div class="alert alert-error">' + errorMsg + '</div>';
     }
