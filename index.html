@@ -694,7 +694,7 @@
         .from('devices')
         .select('*')
         .eq('device_code', deviceCode)
-        .single();
+        .maybeSingle();  // ✅ Dùng maybeSingle() thay vì single() để không throw error khi không tìm thấy
       
       const repairCountPromise = supabaseClient
         .from('incidents')
