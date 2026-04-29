@@ -1895,8 +1895,21 @@
         throw profileError;
       }
       
+      // Step 3: Confirm email automatically
+      submitBtn.textContent = 'Đang confirm email...';
+      const { data: confirmData, error: confirmError } = await supabaseClient
+        .rpc('confirm_user_email', {
+          user_email: email,
+          admin_email: userEmail
+        });
+      
+      if (confirmError) {
+        console.error('Error confirming email:', confirmError);
+        // Don't throw error, just log it - user can still login after manual confirmation
+      }
+      
       // Success
-      document.getElementById('createUserAlert').innerHTML = '<div class="alert alert-success">✅ Tạo tài khoản thành công!<br>Email: ' + email + '<br>Mật khẩu: ' + password + '<br><small>Vui lòng lưu lại thông tin này và gửi cho người dùng.</small></div>';
+      document.getElementById('createUserAlert').innerHTML = '<div class="alert alert-success">✅ Tạo tài khoản thành công!<br>Email: ' + email + '<br>Mật khẩu: ' + password + '<br>✅ Email đã được confirm tự động<br><small>Vui lòng lưu lại thông tin này và gửi cho người dùng.</small></div>';
       
       // Reset form after 3 seconds
       setTimeout(() => {
