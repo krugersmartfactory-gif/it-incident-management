@@ -340,9 +340,14 @@
       <h2 style="margin-bottom:20px;">🔐 Quản trị hệ thống</h2>
       <div id="adminAlert"></div>
       
-      <button id="btnRefreshLockedAccounts" class="btn-primary" style="margin-bottom: 20px;">
-        🔄 Làm mới danh sách
-      </button>
+      <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+        <button id="btnCreateNewUser" class="btn-primary" style="background: #2e7d32;">
+          ➕ Tạo tài khoản mới
+        </button>
+        <button id="btnRefreshLockedAccounts" class="btn-primary">
+          🔄 Làm mới danh sách
+        </button>
+      </div>
       
       <div id="lockedAccountsTable" style="overflow-x: auto;"></div>
     </div>
@@ -406,6 +411,80 @@
     <div style="text-align: center; margin-top: 16px;">
       <button type="button" id="cancelScanBtn" style="padding: 12px 24px; background: #ccc; color: #333; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">Đóng</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL TẠO TÀI KHOẢN MỚI (ADMIN) -->
+<div id="createUserModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; overflow-y: auto;">
+  <div style="background: #fff; border-radius: 12px; padding: 32px; width: 100%; max-width: 500px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); margin: 20px;">
+    <h2 style="margin-top: 0; color: #1a73e8;">➕ Tạo tài khoản người dùng mới</h2>
+    <div id="createUserAlert"></div>
+    <form id="createUserForm">
+      <div class="form-group">
+        <label>Email *</label>
+        <input type="email" id="newUserEmail" required placeholder="example@krugervn.com">
+      </div>
+      <div class="form-group">
+        <label>Mật khẩu * (tối thiểu 8 ký tự, có chữ hoa, chữ thường, số)</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="password" id="newUserPassword" required minlength="8" style="flex: 1;" placeholder="Ví dụ: Password123">
+          <button type="button" id="toggleNewUserPasswordBtn" style="background: #f0f0f0; border: 1.5px solid #ddd; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-size: 16px;">👁</button>
+        </div>
+        <small style="color: #666; font-size: 12px;">Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và số</small>
+      </div>
+      <div class="form-group">
+        <label>Xác nhận mật khẩu *</label>
+        <input type="password" id="newUserConfirmPassword" required minlength="8" placeholder="Nhập lại mật khẩu">
+      </div>
+      <div class="form-group">
+        <label>Họ tên *</label>
+        <input type="text" id="newUserName" required placeholder="Nguyễn Văn A">
+      </div>
+      <div class="form-group">
+        <label>Bộ phận *</label>
+        <input type="text" id="newUserDepartment" required placeholder="IT, Kế toán, Nhân sự...">
+      </div>
+      <div class="form-group">
+        <label>Số điện thoại</label>
+        <input type="tel" id="newUserPhone" placeholder="0912345678">
+      </div>
+      <div class="form-group">
+        <label>Vai trò *</label>
+        <select id="newUserRole" required>
+          <option value="user">User (Người dùng thường)</option>
+          <option value="manager">Manager (Quản lý)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Quyền truy cập form *</label>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+            <input type="checkbox" id="accessReport" checked>
+            <span>Báo hỏng</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+            <input type="checkbox" id="accessProcess" checked>
+            <span>Xử lý sự cố</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+            <input type="checkbox" id="accessRate" checked>
+            <span>Đánh giá</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+            <input type="checkbox" id="accessAdmin">
+            <span>Quản trị (chỉ dành cho Admin)</span>
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+          <input type="checkbox" id="newUserIsAdmin">
+          <span>Đặt làm Admin (có quyền mở khóa tài khoản)</span>
+        </label>
+      </div>
+      <button type="submit" class="btn-primary" style="width: 100%;">Tạo tài khoản</button>
+      <button type="button" id="cancelCreateUserBtn" style="width: 100%; margin-top: 8px; padding: 12px 24px; background: #ccc; color: #333; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">Hủy</button>
+    </form>
   </div>
 </div>
 
@@ -1698,6 +1777,144 @@
   }
   
   // ========================================
+  // ADMIN - CREATE NEW USER
+  // ========================================
+  function showCreateUserModal() {
+    document.getElementById('createUserModal').classList.remove('hidden');
+    document.getElementById('createUserForm').reset();
+    document.getElementById('createUserAlert').innerHTML = '';
+    // Set default checkboxes
+    document.getElementById('accessReport').checked = true;
+    document.getElementById('accessProcess').checked = true;
+    document.getElementById('accessRate').checked = true;
+    document.getElementById('accessAdmin').checked = false;
+    document.getElementById('newUserIsAdmin').checked = false;
+  }
+  
+  function hideCreateUserModal() {
+    document.getElementById('createUserModal').classList.add('hidden');
+    document.getElementById('createUserForm').reset();
+    document.getElementById('createUserAlert').innerHTML = '';
+  }
+  
+  async function handleCreateUser(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById('newUserEmail').value.trim();
+    const password = document.getElementById('newUserPassword').value;
+    const confirmPassword = document.getElementById('newUserConfirmPassword').value;
+    const name = document.getElementById('newUserName').value.trim();
+    const department = document.getElementById('newUserDepartment').value.trim();
+    const phone = document.getElementById('newUserPhone').value.trim();
+    const role = document.getElementById('newUserRole').value;
+    const isAdmin = document.getElementById('newUserIsAdmin').checked;
+    
+    // Build form access string
+    const formAccessArray = [];
+    if (document.getElementById('accessReport').checked) formAccessArray.push('báo hỏng');
+    if (document.getElementById('accessProcess').checked) formAccessArray.push('xử lý');
+    if (document.getElementById('accessRate').checked) formAccessArray.push('đánh giá');
+    if (document.getElementById('accessAdmin').checked) formAccessArray.push('quản trị');
+    const formAccess = formAccessArray.join(', ');
+    
+    // Validation
+    if (password !== confirmPassword) {
+      document.getElementById('createUserAlert').innerHTML = '<div class="alert alert-error">❌ Mật khẩu xác nhận không khớp</div>';
+      return;
+    }
+    
+    // Password strength validation
+    if (password.length < 8) {
+      document.getElementById('createUserAlert').innerHTML = '<div class="alert alert-error">❌ Mật khẩu phải có ít nhất 8 ký tự</div>';
+      return;
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+      document.getElementById('createUserAlert').innerHTML = '<div class="alert alert-error">❌ Mật khẩu phải chứa ít nhất 1 chữ hoa</div>';
+      return;
+    }
+    
+    if (!/[a-z]/.test(password)) {
+      document.getElementById('createUserAlert').innerHTML = '<div class="alert alert-error">❌ Mật khẩu phải chứa ít nhất 1 chữ thường</div>';
+      return;
+    }
+    
+    if (!/[0-9]/.test(password)) {
+      document.getElementById('createUserAlert').innerHTML = '<div class="alert alert-error">❌ Mật khẩu phải chứa ít nhất 1 số</div>';
+      return;
+    }
+    
+    if (formAccessArray.length === 0) {
+      document.getElementById('createUserAlert').innerHTML = '<div class="alert alert-error">❌ Vui lòng chọn ít nhất 1 quyền truy cập form</div>';
+      return;
+    }
+    
+    // Disable submit button
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Đang tạo...';
+    
+    try {
+      // Step 1: Create auth user using admin API
+      // Note: This requires service_role key, so we'll use signUp instead
+      const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          data: {
+            name: name,
+            department: department
+          }
+        }
+      });
+      
+      if (authError) throw authError;
+      
+      if (!authData.user) {
+        throw new Error('Không thể tạo tài khoản xác thực');
+      }
+      
+      // Step 2: Create user profile in public.users
+      const { error: profileError } = await supabaseClient
+        .from('users')
+        .insert({
+          id: authData.user.id,
+          email: email,
+          name: name,
+          department: department,
+          phone: phone || null,
+          access_role: role,
+          form_access: formAccess,
+          is_locked: false,
+          is_admin: isAdmin
+        });
+      
+      if (profileError) {
+        // If profile creation fails, we should delete the auth user
+        // But we can't do that with anon key, so just show error
+        throw profileError;
+      }
+      
+      // Success
+      document.getElementById('createUserAlert').innerHTML = '<div class="alert alert-success">✅ Tạo tài khoản thành công!<br>Email: ' + email + '<br>Mật khẩu: ' + password + '<br><small>Vui lòng lưu lại thông tin này và gửi cho người dùng.</small></div>';
+      
+      // Reset form after 3 seconds
+      setTimeout(() => {
+        hideCreateUserModal();
+        document.getElementById('adminAlert').innerHTML = '<div class="alert alert-success">✅ Đã tạo tài khoản mới: ' + email + '</div>';
+      }, 3000);
+      
+    } catch (error) {
+      const errorMsg = handleSupabaseError(error);
+      document.getElementById('createUserAlert').innerHTML = '<div class="alert alert-error">❌ ' + errorMsg + '</div>';
+      
+      // Re-enable submit button
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Tạo tài khoản';
+    }
+  }
+  
+  // ========================================
   // ADMIN - RESET PASSWORD
   // ========================================
   function showResetPasswordModal(email) {
@@ -1858,6 +2075,39 @@
     const btnRefreshLockedAccounts = document.getElementById('btnRefreshLockedAccounts');
     if (btnRefreshLockedAccounts) {
       btnRefreshLockedAccounts.addEventListener('click', loadLockedAccounts);
+    }
+    
+    // Admin tab - Create new user button
+    const btnCreateNewUser = document.getElementById('btnCreateNewUser');
+    if (btnCreateNewUser) {
+      btnCreateNewUser.addEventListener('click', showCreateUserModal);
+    }
+    
+    // Create user modal - Cancel button
+    const cancelCreateUserBtn = document.getElementById('cancelCreateUserBtn');
+    if (cancelCreateUserBtn) {
+      cancelCreateUserBtn.addEventListener('click', hideCreateUserModal);
+    }
+    
+    // Create user modal - Toggle password visibility
+    const toggleNewUserPasswordBtn = document.getElementById('toggleNewUserPasswordBtn');
+    if (toggleNewUserPasswordBtn) {
+      toggleNewUserPasswordBtn.addEventListener('click', function() {
+        const passwordInput = document.getElementById('newUserPassword');
+        if (passwordInput.type === 'password') {
+          passwordInput.type = 'text';
+          this.textContent = '🙈';
+        } else {
+          passwordInput.type = 'password';
+          this.textContent = '👁';
+        }
+      });
+    }
+    
+    // Create user form submit
+    const createUserForm = document.getElementById('createUserForm');
+    if (createUserForm) {
+      createUserForm.addEventListener('submit', handleCreateUser);
     }
     
     // Make unlockUserAccount available globally
